@@ -1,1 +1,142 @@
-//ok
+:root {
+  --primary-color: #0d9488;       /* Verde Teal elegante */
+  --primary-hover: #0f766e;       /* Teal escuro para hover */
+  --secondary-color: #2563eb;     /* Azul moderno */
+  --secondary-hover: #1d4ed8;     /* Azul escuro para hover */
+  --success-color: #059669;       /* Verde para cadastro/sucesso */
+  --success-hover: #047857;
+  --danger-color: #e11d48;        /* Vermelho elegante para sair/logout */
+  --danger-hover: #be123c;
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);
+  --card-bg: rgba(255, 255, 255, 0.96);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --input-bg: #f8fafc;
+  --focus-ring: rgba(13, 148, 136, 0.25);
+  --radius-lg: 16px;
+  --radius-md: 8px;
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  --transition-fast: all 0.2s ease-in-out;
+}
+
+/* Reset Global e Tipografia */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  padding: 20px;
+}
+
+/* Card Principal (Container da Aplicação) */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: var(--transition-fast);
+}
+
+/* Títulos e Textos */
+h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Campos de Entrada (Inputs) */
+input {
+  width: 100%;
+  padding: 12px 16px;
+  margin: 8px 0 16px 0;
+  background-color: var(--input-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  color: var(--text-main);
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px var(--focus-ring);
+  background-color: #ffffff;
+}
+
+input::placeholder {
+  color: #94a3b8;
+}
+
+/* Estilo Base de Botões */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Classes Utilitárias */
+.oculto {
+  display: none !important;
+}
+
+/* Status e Feedback */
+#status {
+  margin-top: 18px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary-hover);
+  min-height: 1.25rem;
+}
+
+#mensagem-usuario {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-hover);
+  background-color: rgba(13, 148, 136, 0.1);
+  padding: 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+}
