@@ -104,16 +104,19 @@
     }
 
     // 6. ATUALIZAR INTERFACE SE ESTIVER LOGADO
-    function atualizarInterface(user) {
-      if (user) {
-        // Pega o nome do dicionário gravado nos metadados do usuário ou o próprio ID
-        const username = user.user_metadata?.username || user.email;
-        msgUsuario.innerText = `Logado como: ${username}`;
-        
-        telaLogin.classList.add('oculto');
-        telaLogado.classList.remove('oculto');
-      }
+function atualizarInterface(user) {
+  if (user) {
+    const isDbAdmin = user.user_metadata?.role === 'admin';
+
+    if (isDbAdmin) {
+      msgUsuario.innerText = `Logado como: ${user.user_metadata.username} (ADMINISTRADOR)`;
+      // Aqui você pode exibir botões ou menus exclusivos para o admin
+    } else {
+      const username = user.user_metadata?.username || user.email;
+      msgUsuario.innerText = `Logado como: ${username}`;
     }
+  }
+}
 
     // 7. CHECAR SESSÃO ATIVA AO CARREGAR A PÁGINA
     async function checarSessao() {
@@ -126,18 +129,7 @@
     // Executa a checagem assim que abre o site
     checarSessao();
 
-    function atualizarInterface(user) {
-  if (user) {
-    const isDbAdmin = user.user_metadata?.role === 'admin';
 
-    if (isDbAdmin) {
-      msgUsuario.innerText = `Logado como: ${user.user_metadata.username} (ADMINISTRADOR)`;
-      // Aqui você pode exibir botões ou menus exclusivos para o admin
-    } else {
-      const username = user.user_metadata?.username || user.email;
-      msgUsuario.innerText = `Logado como: ${username}`;
-    }
-  }
 }
   </script>
 </body>
