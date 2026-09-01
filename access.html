@@ -17,14 +17,14 @@
       <input type="email" id="email" placeholder="Seu e-mail">
       <input type="password" id="senha" placeholder="Sua senha">
       <button onclick="fazerLogin()">Entrar</button>
-      <button onclick="fazerCadastro()" style="background-color: #28a745;">Cadastrar</button>
+      <button onclick="fazerCadastro()" class="btn-success">Cadastrar</button>
     </div>
 
     <!-- TELA 2: Área Logada -->
     <div id="tela-logado" class="oculto">
       <h2>Bem-vindo!</h2>
       <p id="mensagem-usuario">Logado como: ...</p>
-      <button onclick="fazerLogout()" style="background-color: #dc3545;">Sair</button>
+      <button onclick="fazerLogout()" class="btn-danger">Sair</button>
     </div>
 
     <p id="status"></p>
@@ -32,13 +32,12 @@
 
   <script>
     // 1. CONEXÃO COM O SUPABASE
-    // Substitua os valores abaixo com os dados do seu projeto Supabase:
     const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
     
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Elements do DOM
+    // Elementos do DOM
     const telaLogin = document.getElementById('tela-login');
     const telaLogado = document.getElementById('tela-logado');
     const msgUsuario = document.getElementById('mensagem-usuario');
@@ -46,7 +45,8 @@
 
     // 2. FUNÇÃO PARA NOME DE USUÁRIO ALEATÓRIO (Dicionário + Número)
     function gerarNomeAleatorio() {
-      const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon','Wolf','Lord','Sir','Anaconda','Timelord','Doom','Mega','Omega','Alpha','Master','Gamer','Loco','Crazy','Trooper','Commander','Eagle',Rooster','Magma','Mage','Mister','Gangsta','Warrior'];
+      // CORRIGIDO: Adicionada a aspa em 'Rooster'
+      const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Anaconda', 'Timelord', 'Doom', 'Mega', 'Omega', 'Alpha', 'Master', 'Gamer', 'Loco', 'Crazy', 'Trooper', 'Commander', 'Eagle', 'Rooster', 'Magma', 'Mage', 'Mister', 'Gangsta', 'Warrior'];
       const palavra = palavras[Math.floor(Math.random() * palavras.length)];
       const numero = Math.floor(1000 + Math.random() * 9000); // 4 dígitos
       return `${palavra}${numero}`;
@@ -58,21 +58,20 @@
       const senha = document.getElementById('senha').value;
       statusText.innerText = "Criando conta...";
 
-      // Gera o nome aleatório para salvar nos dados de metadados do usuário
       const nomeUsuario = gerarNomeAleatorio();
 
       const { data, error } = await supabaseClient.auth.signUp({
         email: email,
         password: senha,
         options: {
-          data: { username: nomeUsuario } // Salva o nome sugerido junto à conta
+          data: { username: nomeUsuario }
         }
       });
 
       if (error) {
         statusText.innerText = "Erro no cadastro: " + error.message;
       } else {
-        statusText.innerText = "Cadastro realizado! Verifique seu e-mail para confirmar ou faça login.";
+        statusText.innerText = "Cadastro realizado! Verifique seu e-mail ou faça login.";
       }
     }
 
@@ -104,19 +103,22 @@
     }
 
     // 6. ATUALIZAR INTERFACE SE ESTIVER LOGADO
-function atualizarInterface(user) {
-  if (user) {
-    const isDbAdmin = user.user_metadata?.role === 'admin';
+    function atualizarInterface(user) {
+      if (user) {
+        const isDbAdmin = user.user_metadata?.role === 'admin';
 
-    if (isDbAdmin) {
-      msgUsuario.innerText = `Logado como: ${user.user_metadata.username} (ADMINISTRADOR)`;
-      // Aqui você pode exibir botões ou menus exclusivos para o admin
-    } else {
-      const username = user.user_metadata?.username || user.email;
-      msgUsuario.innerText = `Logado como: ${username}`;
+        if (isDbAdmin) {
+          const nomeAdmin = user.user_metadata?.username || 'Admin';
+          msgUsuario.innerText = `Logado como: ${nomeAdmin} (ADMINISTRADOR)`;
+        } else {
+          const username = user.user_metadata?.username || user.email;
+          msgUsuario.innerText = `Logado como: ${username}`;
+        }
+
+        telaLogin.classList.add('oculto');
+        telaLogado.classList.remove('oculto');
+      }
     }
-  }
-}
 
     // 7. CHECAR SESSÃO ATIVA AO CARREGAR A PÁGINA
     async function checarSessao() {
@@ -128,9 +130,7 @@ function atualizarInterface(user) {
 
     // Executa a checagem assim que abre o site
     checarSessao();
-
-
-}
+    // CORRIGIDO: Removida a chave } extra que estava aqui
   </script>
 </body>
 </html>
