@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f2f5;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 350px;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover { background-color: #0056b3; }
+    .oculto { display: none; }
+    #status { margin-top: 15px; color: #555; }
+  </style>
+  <!-- Biblioteca JS do Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="card">
+    <!-- TELA 1: Formulário de Login / Cadastro -->
+    <div id="tela-login">
+      <h2>Entrar / Cadastrar</h2>
+      <input type="email" id="email" placeholder="Seu e-mail">
+      <input type="password" id="senha" placeholder="Sua senha">
+      <button onclick="fazerLogin()">Entrar</button>
+      <button onclick="fazerCadastro()" style="background-color: #28a745;">Cadastrar</button>
+    </div>
+
+    <!-- TELA 2: Área Logada -->
+    <div id="tela-logado" class="oculto">
+      <h2>Bem-vindo!</h2>
+      <p id="mensagem-usuario">Logado como: ...</p>
+      <button onclick="fazerLogout()" style="background-color: #dc3545;">Sair</button>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    // 1. CONEXÃO COM O SUPABASE
+    // Substitua os valores abaixo com os dados do seu projeto Supabase:
+    const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+    const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON-AQUI';
+    
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Elements do DOM
+    const telaLogin = document.getElementById('tela-login');
+    const telaLogado = document.getElementById('tela-logado');
+    const msgUsuario = document.getElementById('mensagem-usuario');
+    const statusText = document.getElementById('status');
+
+    // 2. FUNÇÃO PARA NOME DE USUÁRIO ALEATÓRIO (Dicionário + Número)
+    function gerarNomeAleatorio() {
+      const palavras = ['Gato', 'Ninja', 'Sombra', 'Fênix', 'Astronauta', 'Falção', 'Lobo'];
+      const palavra = palavras[Math.floor(Math.random() * palavras.length)];
+      const numero = Math.floor(1000 + Math.random() * 9000); // 4 dígitos
+      return `${palavra}${numero}`;
+    }
+
+    // 3. CADASTRAR NOVO USUÁRIO
+    async function fazerCadastro() {
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      statusText.innerText = "Criando conta...";
+
+      // Gera o nome aleatório para salvar nos dados de metadados do usuário
+      const nomeUsuario = gerarNomeAleatorio();
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: senha,
+        options: {
+          data: { username: nomeUsuario } // Salva o nome sugerido junto à conta
+        }
+      });
+
+      if (error) {
+        statusText.innerText = "Erro no cadastro: " + error.message;
+      } else {
+        statusText.innerText = "Cadastro realizado! Verifique seu e-mail para confirmar ou faça login.";
+      }
+    }
+
+    // 4. FAZER LOGIN
+    async function fazerLogin() {
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      statusText.innerText = "Autenticando...";
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: senha,
+      });
+
+      if (error) {
+        statusText.innerText = "Erro ao logar: " + error.message;
+      } else {
+        statusText.innerText = "";
+        atualizarInterface(data.user);
+      }
+    }
+
+    // 5. LOGOUT
+    async function fazerLogout() {
+      await supabaseClient.auth.signOut();
+      telaLogado.classList.add('oculto');
+      telaLogin.classList.remove('oculto');
+      statusText.innerText = "Você saiu.";
+    }
+
+    // 6. ATUALIZAR INTERFACE SE ESTIVER LOGADO
+    function atualizarInterface(user) {
+      if (user) {
+        // Pega o nome do dicionário gravado nos metadados do usuário ou o próprio ID
+        const username = user.user_metadata?.username || user.email;
+        msgUsuario.innerText = `Logado como: ${username}`;
+        
+        telaLogin.classList.add('oculto');
+        telaLogado.classList.remove('oculto');
+      }
+    }
+
+    // 7. CHECAR SESSÃO ATIVA AO CARREGAR A PÁGINA
+    async function checarSessao() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        atualizarInterface(session.user);
+      }
+    }
+
+    // Executa a checagem assim que abre o site
+    checarSessao();
+  </script>
+</body>
+</html>
