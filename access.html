@@ -46,7 +46,7 @@
 
     // 2. FUNÇÃO PARA NOME DE USUÁRIO ALEATÓRIO (Dicionário + Número)
     function gerarNomeAleatorio() {
-      const palavras = ['Gato', 'Ninja', 'Sombra', 'Fênix', 'Astronauta', 'Falção', 'Lobo'];
+      const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon','Wolf','Lord','Sir','Anaconda','Timelord','Doom','Mega','Omega','Alpha','Master','Gamer','Loco','Crazy','Trooper','Commander','Eagle',Rooster','Magma','Mage','Mister','Gangsta','Warrior'];
       const palavra = palavras[Math.floor(Math.random() * palavras.length)];
       const numero = Math.floor(1000 + Math.random() * 9000); // 4 dígitos
       return `${palavra}${numero}`;
@@ -125,6 +125,20 @@
 
     // Executa a checagem assim que abre o site
     checarSessao();
+
+    function atualizarInterface(user) {
+  if (user) {
+    const isDbAdmin = user.user_metadata?.role === 'admin';
+
+    if (isDbAdmin) {
+      msgUsuario.innerText = `Logado como: ${user.user_metadata.username} (ADMINISTRADOR)`;
+      // Aqui você pode exibir botões ou menus exclusivos para o admin
+    } else {
+      const username = user.user_metadata?.username || user.email;
+      msgUsuario.innerText = `Logado como: ${username}`;
+    }
+  }
+}
   </script>
 </body>
 </html>
