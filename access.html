@@ -6,6 +6,101 @@
   <title>STX - Public Timeline Criptografada</title>
   <link rel="stylesheet" href="./css/estilo.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    /* GARANTIA DE LAYOUT CENTRALIZADO E CARDS VISÍVEIS */
+    #timeline-messages {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 12px !important;
+      width: 100% !important;
+      overflow-y: auto !important;
+      padding: 10px 0 !important;
+    }
+
+    /* CARD DE MENSAGEM PADRÃO */
+    .message-card {
+      width: 100% !important;
+      box-sizing: border-box !important;
+      background-color: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      border-left: 5px solid #0d9488 !important;
+      border-radius: 8px !important;
+      padding: 12px 16px !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    }
+
+    .message-card.my-message {
+      border-left-color: #0284c7 !important;
+      background-color: #f0f9ff !important;
+    }
+
+    /* CARD DE AVISO DO ADMIN (FIXO NO TOPO COM DESTAQUE AMARELO) */
+    .message-card.admin-notice {
+      order: -1 !important; /* Move para o topo */
+      background-color: #fffbe3 !important;
+      border: 2px solid #f59e0b !important;
+      border-left: 6px solid #d97706 !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+    }
+
+    .message-card.admin-notice .message-author {
+      color: #b45309 !important;
+      font-weight: 800 !important;
+    }
+
+    .admin-badge {
+      background: #fef3c7 !important;
+      color: #b45309 !important;
+      border: 1px solid #fcd34d !important;
+      font-size: 0.75rem !important;
+      font-weight: 800 !important;
+      padding: 2px 8px !important;
+      border-radius: 12px !important;
+      text-transform: uppercase !important;
+      margin-left: 6px !important;
+      letter-spacing: 0.5px !important;
+    }
+
+    .message-header-info {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      margin-bottom: 6px !important;
+    }
+
+    .message-author {
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .message-time {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .message-body {
+      color: #1e293b;
+      word-break: break-word;
+    }
+
+    .message-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-action {
+      background: none;
+      border: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .btn-action:hover { background: #e2e8f0; }
+  </style>
 </head>
 <body class="app-body-wrapper">
 
@@ -194,15 +289,12 @@
       }
     }
 
-    // --- TIMELINE (MENSAGENS + AVISOS ADMIN) ---
     async function carregarHistoricoTimeline() {
       timelineMessages.innerHTML = '';
       
-      // Ordena trazendo mensagens de Admin (is_admin) primeiro e depois por data
       const { data, error } = await supabaseClient
         .from('timeline_messages')
         .select('*')
-        .order('is_admin', { ascending: false })
         .order('created_at', { ascending: true })
         .limit(50);
 
@@ -212,7 +304,7 @@
 
       for (const msg of data) {
         const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
-        adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, msg.is_admin);
+        adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, Boolean(msg.is_admin));
       }
     }
 
@@ -284,7 +376,6 @@
     function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
       const card = document.createElement('div');
       
-      // Aplica a classe de destaque de admin
       let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
       if (ehAdmin) cardClass += ' admin-notice';
       
@@ -350,13 +441,11 @@
 
       timelineMessages.appendChild(card);
       
-      // Role o scroll para baixo apenas se não for um aviso fixado
       if (!ehAdmin) {
         timelineMessages.scrollTop = timelineMessages.scrollHeight;
       }
     }
 
-    // --- REALTIME ---
     function conectarComunidade(meuUsername, isAdmin) {
       canalRealtime = supabaseClient.channel('stx_global_channel');
 
@@ -370,7 +459,7 @@
               const novaMsg = payload.new;
               const textoClaro = await descriptografarTexto(novaMsg.encrypted_content, novaMsg.iv);
               const ehMinha = novaMsg.author === meuUsername;
-              adicionarMensagemNaTela(novaMsg.id, novaMsg.author, textoClaro, ehMinha, novaMsg.created_at, novaMsg.is_admin);
+              adicionarMensagemNaTela(novaMsg.id, novaMsg.author, textoClaro, ehMinha, novaMsg.created_at, Boolean(novaMsg.is_admin));
 
               if (!ehMinha) {
                 mensagensNaoLidas++;
