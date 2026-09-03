@@ -3,49 +3,215 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STX - Acesso e Comunidade</title>
+  <title>STX - Plataforma de Comunicação</title>
   <link rel="stylesheet" href="css/estilo.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Layout da Área Logada com Sidebar */
-    .app-container {
+    /* Reset local para layout de aplicação em tela cheia */
+    body {
+      padding: 0;
+      margin: 0;
+      display: block;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #0f172a;
+    }
+
+    /* Container de Login (Centralizado) */
+    .login-wrapper {
       display: flex;
-      gap: 20px;
-      width: 100%;
-      max-width: 800px;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
     }
 
-    .main-card {
-      flex: 1;
-    }
-
-    .sidebar {
-      width: 260px;
-      background: var(--card-bg);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg);
-      padding: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Estrutura Principal da App (Aós Login) */
+    .app-layout {
       display: flex;
       flex-direction: column;
-      text-align: left;
+      height: 100vh;
+      width: 100vw;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+
+    /* 1. TOP BAR */
+    .top-bar {
+      height: 60px;
+      background: #0f172a;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .top-bar-brand {
+      font-weight: 900;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #38bdf8 0%, #0d9488 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .top-bar-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 0.9rem;
+    }
+
+    .unread-badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .user-tag {
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .btn-logout {
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      width: auto;
+      margin: 0;
+      box-shadow: none;
+    }
+
+    .btn-logout:hover {
+      background: #be123c;
+    }
+
+    /* 2. CORPO DO APP (Timeline + Sidebar) */
+    .app-body {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* TIMELINE CENTRAL */
+    .main-timeline {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .timeline-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #1e293b;
+      background: #f8fafc;
+    }
+
+    .timeline-messages {
+      flex: 1;
+      padding: 20px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message-card {
+      display: flex;
+      flex-direction: column;
+      background: #f1f5f9;
+      padding: 12px 16px;
+      border-radius: 12px;
+      max-width: 80%;
+      align-self: flex-start;
+      border: 1px solid #e2e8f0;
+    }
+
+    .message-card.my-message {
+      align-self: flex-end;
+      background: #0d9488;
+      color: white;
+      border: none;
+    }
+
+    .message-card.my-message .message-author {
+      color: #99f6e4;
+    }
+
+    .message-author {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #0f766e;
+      margin-bottom: 4px;
+    }
+
+    .message-body {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    /* INPUT DE POSTAGEM */
+    .timeline-input-area {
+      padding: 16px 24px;
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
+      display: flex;
+      gap: 12px;
+    }
+
+    .timeline-input-area input {
+      flex: 1;
+      margin: 0;
+      background: #f8fafc;
+    }
+
+    .timeline-input-area button {
+      width: auto;
+      padding: 0 24px;
+      margin: 0;
+    }
+
+    /* 3. SIDEBAR DIREITA (Usuários Online) */
+    .right-sidebar {
+      width: 280px;
+      background: #f8fafc;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
     }
 
     .sidebar-title {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: #64748b;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 1rem;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
     .online-dot {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       background-color: #22c55e;
       border-radius: 50%;
       box-shadow: 0 0 8px #22c55e;
@@ -56,111 +222,125 @@
       padding: 0;
       margin: 0;
       overflow-y: auto;
-      max-height: 250px;
+      flex: 1;
     }
 
     .user-item {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 8px 10px;
-      border-radius: var(--radius-md);
-      background: rgba(15, 23, 42, 0.03);
-      margin-bottom: 6px;
-      font-size: 0.88rem;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #334155;
     }
 
-    .btn-wave {
-      background: var(--primary-color);
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0d9488;
       color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 0.75rem;
-      cursor: pointer;
-      width: auto;
-      margin: 0;
+      font-weight: 700;
     }
 
-    .btn-wave:hover {
-      background: var(--primary-hover);
-    }
-
-    /* Notificação Toast na tela */
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #0f172a;
-      color: #38bdf8;
-      padding: 12px 20px;
-      border-radius: var(--radius-md);
-      box-shadow: 0 10px 15px rgba(0,0,0,0.3);
-      border: 1px solid var(--primary-color);
-      display: none;
-      z-index: 1000;
-    }
-
-    @media (max-width: 650px) {
-      .app-container { flex-direction: column; }
-      .sidebar { width: 100%; }
+    @media (max-width: 768px) {
+      .right-sidebar { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <div class="app-container">
-    
-    <!-- TELA PRINCIPAL (Login / Área do Usuário) -->
-    <div class="card main-card">
+  <!-- TELA DE LOGIN (Mostrada antes da autenticação) -->
+  <div id="wrapper-login" class="login-wrapper">
+    <div class="card">
       <div id="tela-login">
-        <h2>Entrar / Cadastrar</h2>
+        <h2>STX Platform</h2>
         <input type="email" id="email" placeholder="Seu e-mail">
         <input type="password" id="senha" placeholder="Sua senha">
         <button onclick="fazerLogin()">Entrar</button>
         <button onclick="fazerCadastro()" class="btn-success">Cadastrar</button>
       </div>
-
-      <div id="tela-logado" class="oculto">
-        <h2>Área STX</h2>
-        <p id="mensagem-usuario">Logado como: ...</p>
-        <button onclick="fazerLogout()" class="btn-danger">Sair</button>
-      </div>
-
       <p id="status"></p>
     </div>
-
-    <!-- BARRA LATERAL (Interação / Usuários Online) -->
-    <div id="sidebar-comunidade" class="sidebar oculto">
-      <div class="sidebar-title">
-        <span class="online-dot"></span> Online (<span id="count-online">0</span>)
-      </div>
-      <ul id="lista-online" class="user-list">
-        <li>Buscando usuários...</li>
-      </ul>
-    </div>
-
   </div>
 
-  <!-- Caixinha de Notificação em Tempo Real -->
-  <div id="toast"></div>
+  <!-- APLICAÇÃO COMPLETA (Mostrada após o login) -->
+  <div id="app-layout" class="app-layout oculto">
+    
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="top-bar-brand">STX</div>
+      
+      <div class="top-bar-info">
+        <div class="unread-badge">
+          ✉️ <span id="unread-count">0</span> unread messages
+        </div>
+        <div class="user-tag">
+          Logged as <strong id="topbar-username">...</strong>
+        </div>
+        <button onclick="fazerLogout()" class="btn-logout">Logout</button>
+      </div>
+    </header>
+
+    <!-- Corpo do App -->
+    <div class="app-body">
+      
+      <!-- Public Timeline Central -->
+      <main class="main-timeline">
+        <div class="timeline-header">
+          Public Timeline
+        </div>
+
+        <div id="timeline-messages" class="timeline-messages">
+          <!-- Mensagens geradas via JavaScript -->
+        </div>
+
+        <div class="timeline-input-area">
+          <input type="text" id="mensagem-input" placeholder="Escreva uma mensagem na Timeline pública..." onkeypress="tratarTeclaEnter(event)">
+          <button onclick="enviarMensagemTimeline()">Publicar</button>
+        </div>
+      </main>
+
+      <!-- Sidebar Direita -->
+      <aside class="right-sidebar">
+        <div class="sidebar-title">
+          <span class="online-dot"></span> Active Users (<span id="count-online">0</span>)
+        </div>
+        <ul id="lista-online" class="user-list">
+          <li>Carregando...</li>
+        </ul>
+      </aside>
+
+    </div>
+  </div>
 
   <script>
     const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const telaLogin = document.getElementById('tela-login');
-    const telaLogado = document.getElementById('tela-logado');
-    const sidebarComunidade = document.getElementById('sidebar-comunidade');
-    const msgUsuario = document.getElementById('mensagem-usuario');
+    const wrapperLogin = document.getElementById('wrapper-login');
+    const appLayout = document.getElementById('app-layout');
     const statusText = document.getElementById('status');
+    const topbarUsername = document.getElementById('topbar-username');
     const listaOnline = document.getElementById('lista-online');
     const countOnline = document.getElementById('count-online');
-    const toast = document.getElementById('toast');
+    const timelineMessages = document.getElementById('timeline-messages');
+    const mensagemInput = document.getElementById('mensagem-input');
+    const unreadCount = document.getElementById('unread-count');
 
     let canalRealtime = null;
     let usuarioAtual = null;
+    let mensagensNaoLidas = 0;
 
     function gerarNomeAleatorio() {
       const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior'];
@@ -196,9 +376,8 @@
     async function fazerLogout() {
       if (canalRealtime) await canalRealtime.unsubscribe();
       await supabaseClient.auth.signOut();
-      telaLogado.classList.add('oculto');
-      sidebarComunidade.classList.add('oculto');
-      telaLogin.classList.remove('oculto');
+      appLayout.classList.add('oculto');
+      wrapperLogin.classList.remove('oculto');
       statusText.innerText = "Você saiu.";
     }
 
@@ -208,28 +387,31 @@
         const isDbAdmin = user.user_metadata?.role === 'admin';
         const username = user.user_metadata?.username || user.email;
 
-        msgUsuario.innerText = isDbAdmin ? `Logado como: ${username} (ADMIN)` : `Logado como: ${username}`;
+        topbarUsername.innerText = isDbAdmin ? `${username} (ADMIN)` : username;
 
-        telaLogin.classList.add('oculto');
-        telaLogado.classList.remove('oculto');
-        sidebarComunidade.classList.remove('oculto');
+        wrapperLogin.classList.add('oculto');
+        appLayout.classList.remove('oculto');
 
         conectarComunidade(username, isDbAdmin);
       }
     }
 
-    // CONECTA AO CANAL DE INTERAÇÃO E PRESENÇA
+    // CONECTA AO REALTIME PARA TIMELINE E SIDEBAR
     function conectarComunidade(meuUsername, isAdmin) {
-      canalRealtime = supabaseClient.channel('sala_comunidade');
+      canalRealtime = supabaseClient.channel('stx_global_channel');
 
-      // 1. Ouvir interações de outros usuários (Acenar/Saudação)
-      canalRealtime.on('broadcast', { event: 'aceno' }, (payload) => {
-        if (payload.para === meuUsername) {
-          exibirNotificacao(`👋 ${payload.de} acenou para você!`);
+      // 1. Escuta novas mensagens publicadas na Timeline
+      canalRealtime.on('broadcast', { event: 'nova_mensagem' }, (payload) => {
+        adicionarMensagemNaTela(payload.autor, payload.texto, payload.autor === meuUsername);
+        
+        // Se a mensagem veio de outra pessoa, incrementa o contador de unread
+        if (payload.autor !== meuUsername) {
+          mensagensNaoLidas++;
+          unreadCount.innerText = mensagensNaoLidas;
         }
       });
 
-      // 2. Atualizar lista de presença
+      // 2. Escuta lista de presença de usuários online
       canalRealtime.on('presence', { event: 'sync' }, () => {
         const state = canalRealtime.presenceState();
         atualizarListaSidebar(state, meuUsername);
@@ -240,6 +422,39 @@
           await canalRealtime.track({ username: meuUsername });
         }
       });
+    }
+
+    // Envio de mensagem na Timeline
+    function enviarMensagemTimeline() {
+      const texto = mensagemInput.value.trim();
+      if (!texto) return;
+
+      const meuNome = usuarioAtual.user_metadata?.username || "Anônimo";
+
+      canalRealtime.send({
+        type: 'broadcast',
+        event: 'nova_mensagem',
+        payload: { autor: meuNome, texto: texto }
+      });
+
+      mensagemInput.value = '';
+    }
+
+    function tratarTeclaEnter(event) {
+      if (event.key === 'Enter') enviarMensagemTimeline();
+    }
+
+    function adicionarMensagemNaTela(autor, texto, ehMinha) {
+      const card = document.createElement('div');
+      card.className = ehMinha ? 'message-card my-message' : 'message-card';
+
+      card.innerHTML = `
+        <span class="message-author">${autor}</span>
+        <span class="message-body">${texto}</span>
+      `;
+
+      timelineMessages.appendChild(card);
+      timelineMessages.scrollTop = timelineMessages.scrollHeight;
     }
 
     function atualizarListaSidebar(state, meuUsername) {
@@ -255,37 +470,19 @@
       countOnline.innerText = lista.length;
 
       if (lista.length === 0) {
-        listaOnline.innerHTML = '<li>Nenhum outro usuário online.</li>';
+        listaOnline.innerHTML = '<li style="padding:10px; color:#94a3b8;">Nenhum usuário online</li>';
         return;
       }
 
       listaOnline.innerHTML = lista.map(nome => {
-        if (nome === meuUsername) return `<li class="user-item"><strong>${nome} (Você)</strong></li>`;
+        const inicial = nome.charAt(0).toUpperCase();
+        const ehVoce = nome === meuUsername ? ' (Você)' : '';
         return `
           <li class="user-item">
-            <span>👤 ${nome}</span>
-            <button class="btn-wave" onclick="acenarPara('${nome}')">👋 Olá</button>
+            <div class="user-avatar">${inicial}</div>
+            <span>${nome}${ehVoce}</span>
           </li>`;
       }).join('');
-    }
-
-    // Função para enviar uma interação direta para outro usuário online
-    function acenarPara(nomeDestinatario) {
-      const meuNome = usuarioAtual.user_metadata?.username || "Alguém";
-      
-      canalRealtime.send({
-        type: 'broadcast',
-        event: 'aceno',
-        payload: { de: meuNome, para: nomeDestinatario }
-      });
-
-      exibirNotificacao(`Você acenou para ${nomeDestinatario}!`);
-    }
-
-    function exibirNotificacao(texto) {
-      toast.innerText = texto;
-      toast.style.display = 'block';
-      setTimeout(() => { toast.style.display = 'none'; }, 4000);
     }
 
     async function checarSessao() {
