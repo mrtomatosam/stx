@@ -294,7 +294,7 @@
       await supabaseClient.auth.signOut();
       appLayout.classList.add('oculto');
       wrapperLogin.classList.remove('oculto');
-      statusText.innerText = "Você saiu.";
+      statusText.innerText = "Logged out.";
     }
 
     function atualizarInterface(user) {
@@ -416,7 +416,7 @@
       if (ehAdmin) {
         authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Aviso Geral</span>`;
       } else {
-        authorSpan.textContent = `${autor}${ehMinha ? ' (Você)' : ''}`;
+        authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
       }
 
       const rightHeaderDiv = document.createElement('div');
@@ -526,7 +526,7 @@
 
       listaOnline.innerHTML = lista.map(nome => {
         const inicial = nome.charAt(0).toUpperCase();
-        const ehVoce = nome === meuUsername ? ' (Você)' : '';
+        const ehVoce = nome === meuUsername ? ' (You)' : '';
         return `
           <li class="user-item">
             <div class="user-avatar">${inicial}</div>
