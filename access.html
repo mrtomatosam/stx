@@ -3,134 +3,297 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Login</title>
+  <title>STX - Acesso e Comunidade</title>
   <link rel="stylesheet" href="css/estilo.css">
-  <!-- Biblioteca JS do Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Layout da Área Logada com Sidebar */
+    .app-container {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .main-card {
+      flex: 1;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .sidebar-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .online-dot {
+      width: 9px;
+      height: 9px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .user-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      overflow-y: auto;
+      max-height: 250px;
+    }
+
+    .user-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      background: rgba(15, 23, 42, 0.03);
+      margin-bottom: 6px;
+      font-size: 0.88rem;
+    }
+
+    .btn-wave {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      width: auto;
+      margin: 0;
+    }
+
+    .btn-wave:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Notificação Toast na tela */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+      border: 1px solid var(--primary-color);
+      display: none;
+      z-index: 1000;
+    }
+
+    @media (max-width: 650px) {
+      .app-container { flex-direction: column; }
+      .sidebar { width: 100%; }
+    }
+  </style>
 </head>
 <body>
 
-  <div class="card">
-    <!-- TELA 1: Formulário de Login / Cadastro -->
-    <div id="tela-login">
-      <h2>Entrar / Cadastrar</h2>
-      <input type="email" id="email" placeholder="Seu e-mail">
-      <input type="password" id="senha" placeholder="Sua senha">
-      <button onclick="fazerLogin()">Entrar</button>
-      <button onclick="fazerCadastro()" class="btn-success">Cadastrar</button>
+  <div class="app-container">
+    
+    <!-- TELA PRINCIPAL (Login / Área do Usuário) -->
+    <div class="card main-card">
+      <div id="tela-login">
+        <h2>Entrar / Cadastrar</h2>
+        <input type="email" id="email" placeholder="Seu e-mail">
+        <input type="password" id="senha" placeholder="Sua senha">
+        <button onclick="fazerLogin()">Entrar</button>
+        <button onclick="fazerCadastro()" class="btn-success">Cadastrar</button>
+      </div>
+
+      <div id="tela-logado" class="oculto">
+        <h2>Área STX</h2>
+        <p id="mensagem-usuario">Logado como: ...</p>
+        <button onclick="fazerLogout()" class="btn-danger">Sair</button>
+      </div>
+
+      <p id="status"></p>
     </div>
 
-    <!-- TELA 2: Área Logada -->
-    <div id="tela-logado" class="oculto">
-      <h2>Bem-vindo!</h2>
-      <p id="mensagem-usuario">Logado como: ...</p>
-      <button onclick="fazerLogout()" class="btn-danger">Sair</button>
+    <!-- BARRA LATERAL (Interação / Usuários Online) -->
+    <div id="sidebar-comunidade" class="sidebar oculto">
+      <div class="sidebar-title">
+        <span class="online-dot"></span> Online (<span id="count-online">0</span>)
+      </div>
+      <ul id="lista-online" class="user-list">
+        <li>Buscando usuários...</li>
+      </ul>
     </div>
 
-    <p id="status"></p>
   </div>
 
+  <!-- Caixinha de Notificação em Tempo Real -->
+  <div id="toast"></div>
+
   <script>
-    // 1. CONEXÃO COM O SUPABASE
     const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
-    
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Elementos do DOM
     const telaLogin = document.getElementById('tela-login');
     const telaLogado = document.getElementById('tela-logado');
+    const sidebarComunidade = document.getElementById('sidebar-comunidade');
     const msgUsuario = document.getElementById('mensagem-usuario');
     const statusText = document.getElementById('status');
+    const listaOnline = document.getElementById('lista-online');
+    const countOnline = document.getElementById('count-online');
+    const toast = document.getElementById('toast');
 
-    // 2. FUNÇÃO PARA NOME DE USUÁRIO ALEATÓRIO (Dicionário + Número)
+    let canalRealtime = null;
+    let usuarioAtual = null;
+
     function gerarNomeAleatorio() {
-      // CORRIGIDO: Adicionada a aspa em 'Rooster'
-      const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Anaconda', 'Timelord', 'Doom', 'Mega', 'Omega', 'Alpha', 'Master', 'Gamer', 'Loco', 'Crazy', 'Trooper', 'Commander', 'Eagle', 'Rooster', 'Magma', 'Mage', 'Mister', 'Gangsta', 'Warrior'];
+      const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior'];
       const palavra = palavras[Math.floor(Math.random() * palavras.length)];
-      const numero = Math.floor(1000 + Math.random() * 9000); // 4 dígitos
+      const numero = Math.floor(1000 + Math.random() * 9000);
       return `${palavra}${numero}`;
     }
 
-    // 3. CADASTRAR NOVO USUÁRIO
     async function fazerCadastro() {
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
       statusText.innerText = "Criando conta...";
 
-      const nomeUsuario = gerarNomeAleatorio();
-
       const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: senha,
-        options: {
-          data: { username: nomeUsuario }
-        }
+        email: email, password: senha,
+        options: { data: { username: gerarNomeAleatorio() } }
       });
 
-      if (error) {
-        statusText.innerText = "Erro no cadastro: " + error.message;
-      } else {
-        statusText.innerText = "Cadastro realizado! Verifique seu e-mail ou faça login.";
-      }
+      if (error) statusText.innerText = "Erro: " + error.message;
+      else statusText.innerText = "Cadastro realizado! Faça o login.";
     }
 
-    // 4. FAZER LOGIN
     async function fazerLogin() {
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
       statusText.innerText = "Autenticando...";
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: senha,
-      });
-
-      if (error) {
-        statusText.innerText = "Erro ao logar: " + error.message;
-      } else {
-        statusText.innerText = "";
-        atualizarInterface(data.user);
-      }
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+      if (error) statusText.innerText = "Erro: " + error.message;
+      else { statusText.innerText = ""; atualizarInterface(data.user); }
     }
 
-    // 5. LOGOUT
     async function fazerLogout() {
+      if (canalRealtime) await canalRealtime.unsubscribe();
       await supabaseClient.auth.signOut();
       telaLogado.classList.add('oculto');
+      sidebarComunidade.classList.add('oculto');
       telaLogin.classList.remove('oculto');
       statusText.innerText = "Você saiu.";
     }
 
-    // 6. ATUALIZAR INTERFACE SE ESTIVER LOGADO
     function atualizarInterface(user) {
       if (user) {
+        usuarioAtual = user;
         const isDbAdmin = user.user_metadata?.role === 'admin';
+        const username = user.user_metadata?.username || user.email;
 
-        if (isDbAdmin) {
-          const nomeAdmin = user.user_metadata?.username || 'Admin';
-          msgUsuario.innerText = `Logado como: ${nomeAdmin} (ADMINISTRADOR)`;
-        } else {
-          const username = user.user_metadata?.username || user.email;
-          msgUsuario.innerText = `Logado como: ${username}`;
-        }
+        msgUsuario.innerText = isDbAdmin ? `Logado como: ${username} (ADMIN)` : `Logado como: ${username}`;
 
         telaLogin.classList.add('oculto');
         telaLogado.classList.remove('oculto');
+        sidebarComunidade.classList.remove('oculto');
+
+        conectarComunidade(username, isDbAdmin);
       }
     }
 
-    // 7. CHECAR SESSÃO ATIVA AO CARREGAR A PÁGINA
+    // CONECTA AO CANAL DE INTERAÇÃO E PRESENÇA
+    function conectarComunidade(meuUsername, isAdmin) {
+      canalRealtime = supabaseClient.channel('sala_comunidade');
+
+      // 1. Ouvir interações de outros usuários (Acenar/Saudação)
+      canalRealtime.on('broadcast', { event: 'aceno' }, (payload) => {
+        if (payload.para === meuUsername) {
+          exibirNotificacao(`👋 ${payload.de} acenou para você!`);
+        }
+      });
+
+      // 2. Atualizar lista de presença
+      canalRealtime.on('presence', { event: 'sync' }, () => {
+        const state = canalRealtime.presenceState();
+        atualizarListaSidebar(state, meuUsername);
+      });
+
+      canalRealtime.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED' && !isAdmin) {
+          await canalRealtime.track({ username: meuUsername });
+        }
+      });
+    }
+
+    function atualizarListaSidebar(state, meuUsername) {
+      const usuariosMap = new Map();
+
+      Object.values(state).forEach(presences => {
+        presences.forEach(p => {
+          if (p.username) usuariosMap.set(p.username, p);
+        });
+      });
+
+      const lista = Array.from(usuariosMap.keys());
+      countOnline.innerText = lista.length;
+
+      if (lista.length === 0) {
+        listaOnline.innerHTML = '<li>Nenhum outro usuário online.</li>';
+        return;
+      }
+
+      listaOnline.innerHTML = lista.map(nome => {
+        if (nome === meuUsername) return `<li class="user-item"><strong>${nome} (Você)</strong></li>`;
+        return `
+          <li class="user-item">
+            <span>👤 ${nome}</span>
+            <button class="btn-wave" onclick="acenarPara('${nome}')">👋 Olá</button>
+          </li>`;
+      }).join('');
+    }
+
+    // Função para enviar uma interação direta para outro usuário online
+    function acenarPara(nomeDestinatario) {
+      const meuNome = usuarioAtual.user_metadata?.username || "Alguém";
+      
+      canalRealtime.send({
+        type: 'broadcast',
+        event: 'aceno',
+        payload: { de: meuNome, para: nomeDestinatario }
+      });
+
+      exibirNotificacao(`Você acenou para ${nomeDestinatario}!`);
+    }
+
+    function exibirNotificacao(texto) {
+      toast.innerText = texto;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
     async function checarSessao() {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        atualizarInterface(session.user);
-      }
+      if (session) atualizarInterface(session.user);
     }
 
-    // Executa a checagem assim que abre o site
     checarSessao();
-    // CORRIGIDO: Removida a chave } extra que estava aqui
   </script>
 </body>
 </html>
