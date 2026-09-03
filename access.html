@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STX - Public Timeline Criptografada</title>
-  <link rel="stylesheet" href="css/estilo.css">
+  <!-- Caminho relativo corrigido para o GitHub Pages -->
+  <link rel="stylesheet" href="./css/estilo.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="app-body-wrapper">
@@ -26,7 +27,6 @@
   <!-- APLICAÇÃO PRINCIPAL -->
   <div id="app-layout" class="app-layout oculto">
     
-    <!-- Top Bar -->
     <header class="top-bar">
       <div class="top-bar-brand">STX</div>
       
@@ -41,10 +41,8 @@
       </div>
     </header>
 
-    <!-- Corpo do App -->
     <div class="app-body">
       
-      <!-- Feed Centralizado -->
       <main class="main-timeline">
         <div class="timeline-header">
           <span>Public Timeline</span>
@@ -70,7 +68,6 @@
         </div>
       </main>
 
-      <!-- Sidebar Direita -->
       <aside class="right-sidebar">
         <div class="sidebar-title">
           <span class="online-dot"></span> Active Users (<span id="count-online">0</span>)
@@ -167,8 +164,12 @@
       statusText.innerText = "Autenticando...";
 
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-      if (error) statusText.innerText = "Erro: " + error.message;
-      else { statusText.innerText = ""; atualizarInterface(data.user); }
+      if (error) {
+        statusText.innerText = "Erro ao logar: " + error.message;
+      } else {
+        statusText.innerText = "";
+        atualizarInterface(data.user);
+      }
     }
 
     async function fazerLogout() {
