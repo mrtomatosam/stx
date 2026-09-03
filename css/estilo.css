@@ -431,4 +431,29 @@ body, html {
 .btn-delete:hover {
   background: #ffe4e6;
 }
+   /* Card de Mensagem do Admin (Aviso Geral) */
+.message-card.admin-notice {
+  background: #fffbebfb;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  order: -1; /* Força o card a subir para o topo no container Flex */
+}
+
+.message-card.admin-notice .message-author {
+  color: #b45309;
+  font-weight: 800;
+}
+
+.admin-badge {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+}
 }
