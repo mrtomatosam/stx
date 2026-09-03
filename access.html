@@ -194,13 +194,15 @@
       }
     }
 
-    // --- TIMELINE (CRUD) ---
+    // --- TIMELINE (MENSAGENS + AVISOS ADMIN) ---
     async function carregarHistoricoTimeline() {
       timelineMessages.innerHTML = '';
       
+      // Ordena trazendo mensagens de Admin (is_admin) primeiro e depois por data
       const { data, error } = await supabaseClient
         .from('timeline_messages')
         .select('*')
+        .order('is_admin', { ascending: false })
         .order('created_at', { ascending: true })
         .limit(50);
 
@@ -210,7 +212,7 @@
 
       for (const msg of data) {
         const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
-        adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at);
+        adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, msg.is_admin);
       }
     }
 
@@ -219,13 +221,15 @@
       if (!textoSanitizado) return;
 
       const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
+      const ehAdmin = usuarioAtual.user_metadata?.role === 'admin';
 
       try {
         const { encryptedContent, iv } = await criptografarTexto(textoSanitizado);
         const { error } = await supabaseClient.from('timeline_messages').insert([{
           author: meuNome,
           encrypted_content: encryptedContent,
-          iv: iv
+          iv: iv,
+          is_admin: ehAdmin
         }]);
 
         if (error) alert("Erro ao enviar: " + error.message);
@@ -277,9 +281,14 @@
       if (event.key === 'Enter') enviarMensagemTimeline();
     }
 
-    function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora) {
+    function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
       const card = document.createElement('div');
-      card.className = ehMinha ? 'message-card my-message' : 'message-card';
+      
+      // Aplica a classe de destaque de admin
+      let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
+      if (ehAdmin) cardClass += ' admin-notice';
+      
+      card.className = cardClass;
       card.setAttribute('id', `msg-${id}`);
 
       const horaFormatada = hora 
@@ -291,7 +300,12 @@
 
       const authorSpan = document.createElement('span');
       authorSpan.className = 'message-author';
-      authorSpan.textContent = `${autor}${ehMinha ? ' (Você)' : ''}`;
+      
+      if (ehAdmin) {
+        authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Aviso Geral</span>`;
+      } else {
+        authorSpan.textContent = `${autor}${ehMinha ? ' (Você)' : ''}`;
+      }
 
       const rightHeaderDiv = document.createElement('div');
       rightHeaderDiv.style.display = 'flex';
@@ -303,7 +317,6 @@
       timeSpan.textContent = horaFormatada;
       rightHeaderDiv.appendChild(timeSpan);
 
-      // Adiciona botões de ação se a mensagem for do usuário atual
       if (ehMinha) {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'message-actions';
@@ -336,7 +349,11 @@
       card.appendChild(bodyDiv);
 
       timelineMessages.appendChild(card);
-      timelineMessages.scrollTop = timelineMessages.scrollHeight;
+      
+      // Role o scroll para baixo apenas se não for um aviso fixado
+      if (!ehAdmin) {
+        timelineMessages.scrollTop = timelineMessages.scrollHeight;
+      }
     }
 
     // --- REALTIME ---
@@ -353,7 +370,7 @@
               const novaMsg = payload.new;
               const textoClaro = await descriptografarTexto(novaMsg.encrypted_content, novaMsg.iv);
               const ehMinha = novaMsg.author === meuUsername;
-              adicionarMensagemNaTela(novaMsg.id, novaMsg.author, textoClaro, ehMinha, novaMsg.created_at);
+              adicionarMensagemNaTela(novaMsg.id, novaMsg.author, textoClaro, ehMinha, novaMsg.created_at, novaMsg.is_admin);
 
               if (!ehMinha) {
                 mensagensNaoLidas++;
