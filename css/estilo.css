@@ -248,24 +248,20 @@ body, html {
   border: 1px solid #bbf7d0;
 }
 
-/* Container da Timeline - Necessário para o suporte ao order:-1 */
 #timeline-messages {
   display: flex;
   flex-direction: column;
+  align-items: stretch; /* Força os cards a ocuparem a largura total */
   gap: 12px;
+  width: 100%;
   overflow-y: auto;
+  padding: 10px 0;
 }
 
+/* Card de Mensagem - Estica 100% da largura disponível */
 .message-card {
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  padding: 18px 22px;
-  border-radius: 12px;
   width: 100%;
-  max-width: 850px;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box; /* Evita estourar as margens laterais com padding */
 }
 
 .message-card.my-message {
@@ -435,7 +431,8 @@ body, html {
   border: 2px solid #f59e0b !important;
   border-left: 6px solid #f59e0b !important;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
-  order: -1 !important; /* Move a mensagem para o topo da lista */
+  order: -1 !important; /* Fixa no topo */
+  width: 100%;
 }
 
 .message-card.admin-notice .message-author {
