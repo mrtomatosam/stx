@@ -8,15 +8,18 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
-    /* GARANTIA DE LAYOUT CENTRALIZADO E CARDS VISÍVEIS */
+    /* CONTAINER CENTRALIZADO E COM MARGEM LATERAL */
     #timeline-messages {
       display: flex !important;
       flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 12px !important;
+      align-items: center !important; /* Centraliza os cards */
+      gap: 14px !important;
       width: 100% !important;
+      max-width: 820px !important; /* Limita a largura para não ficar muito amplo */
+      margin: 0 auto !important; /* Centraliza o bloco na tela */
       overflow-y: auto !important;
-      padding: 10px 0 !important;
+      padding: 15px 20px !important;
+      box-sizing: border-box !important;
     }
 
     /* CARD DE MENSAGEM PADRÃO */
@@ -36,13 +39,13 @@
       background-color: #f0f9ff !important;
     }
 
-    /* CARD DE AVISO DO ADMIN (FIXO NO TOPO COM DESTAQUE AMARELO) */
+    /* CARD DE AVISO DO ADMIN (FIXO NO TOPO) */
     .message-card.admin-notice {
-      order: -1 !important; /* Move para o topo */
+      order: -1 !important;
       background-color: #fffbe3 !important;
       border: 2px solid #f59e0b !important;
       border-left: 6px solid #d97706 !important;
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15) !important;
     }
 
     .message-card.admin-notice .message-author {
@@ -54,7 +57,7 @@
       background: #fef3c7 !important;
       color: #b45309 !important;
       border: 1px solid #fcd34d !important;
-      font-size: 0.75rem !important;
+      font-size: 0.72rem !important;
       font-weight: 800 !important;
       padding: 2px 8px !important;
       border-radius: 12px !important;
@@ -76,8 +79,9 @@
     }
 
     .message-time {
-      font-size: 0.75rem;
-      color: #94a3b8;
+      font-size: 0.78rem;
+      color: #64748b;
+      font-weight: 500;
     }
 
     .message-body {
@@ -100,6 +104,14 @@
       border-radius: 4px;
     }
     .btn-action:hover { background: #e2e8f0; }
+
+    /* AJUSTE NA CAIXA DE INPUT PARA ACOMPANHAR A LARGURA */
+    .timeline-input-container {
+      max-width: 820px !important;
+      margin: 0 auto !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
   </style>
 </head>
 <body class="app-body-wrapper">
@@ -235,6 +247,18 @@
       crypto.getRandomValues(array);
       const sufixoUnico = Array.from(array, byte => byte.toString(36).padStart(2, '0')).join('').substring(0, 5).toUpperCase();
       return `${palavra}_${sufixoUnico}`;
+    }
+
+    // FORMATAÇÃO DE DATA EM PT-BR (DD/MM/YYYY HH:mm - 24H)
+    function formatarDataHora(dataIso) {
+      const d = dataIso ? new Date(dataIso) : new Date();
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const ano = d.getFullYear();
+      const horas = String(d.getHours()).padStart(2, '0');
+      const minutos = String(d.getMinutes()).padStart(2, '0');
+      
+      return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
     }
 
     async function fazerCadastro() {
@@ -382,9 +406,7 @@
       card.className = cardClass;
       card.setAttribute('id', `msg-${id}`);
 
-      const horaFormatada = hora 
-        ? new Date(hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dataHoraFormatada = formatarDataHora(hora);
 
       const headerDiv = document.createElement('div');
       headerDiv.className = 'message-header-info';
@@ -405,7 +427,7 @@
 
       const timeSpan = document.createElement('span');
       timeSpan.className = 'message-time';
-      timeSpan.textContent = horaFormatada;
+      timeSpan.textContent = dataHoraFormatada;
       rightHeaderDiv.appendChild(timeSpan);
 
       if (ehMinha) {
