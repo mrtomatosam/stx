@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STX - Public Timeline Criptografada</title>
-  <!-- Caminho relativo corrigido para o GitHub Pages -->
+  <!-- Estilos externos consolidados -->
   <link rel="stylesheet" href="./css/estilo.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -27,6 +27,7 @@
   <!-- APLICAÇÃO PRINCIPAL -->
   <div id="app-layout" class="app-layout oculto">
     
+    <!-- Top Bar -->
     <header class="top-bar">
       <div class="top-bar-brand">STX</div>
       
@@ -41,8 +42,10 @@
       </div>
     </header>
 
+    <!-- Corpo da Aplicação -->
     <div class="app-body">
       
+      <!-- Feed Centralizado -->
       <main class="main-timeline">
         <div class="timeline-header">
           <span>Public Timeline</span>
@@ -50,7 +53,7 @@
         </div>
 
         <div id="timeline-messages" class="timeline-messages">
-          <!-- Mensagens renderizadas centralizadas -->
+          <!-- Mensagens renderizadas aqui -->
         </div>
 
         <div class="timeline-input-container">
@@ -68,6 +71,7 @@
         </div>
       </main>
 
+      <!-- Sidebar Direita (Usuários Online) -->
       <aside class="right-sidebar">
         <div class="sidebar-title">
           <span class="online-dot"></span> Active Users (<span id="count-online">0</span>)
@@ -81,12 +85,14 @@
   </div>
 
   <script>
+    // --- CONFIGURAÇÃO SUPABASE ---
     const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
 
+    // --- ELEMENTOS DO DOM ---
     const wrapperLogin = document.getElementById('wrapper-login');
     const appLayout = document.getElementById('app-layout');
     const statusText = document.getElementById('status');
@@ -101,6 +107,17 @@
     let canalRealtime = null;
     let usuarioAtual = null;
     let mensagensNaoLidas = 0;
+
+    // --- SEGURANÇA E SANITIZAÇÃO (ANTI-EXPLOIT) ---
+    function sanitizarEntrada(input) {
+      if (typeof input !== 'string') return '';
+      return input
+        // Remove caracteres nulos e de controle invisíveis
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+        // Normaliza caracteres Unicode para evitar bypass de codificação
+        .normalize('NFC')
+        .trim();
+    }
 
     // --- MÓDULO DE CRIPTOGRAFIA (AES-GCM Web Crypto API) ---
     async function obterChaveCriptografia() {
@@ -220,34 +237,39 @@
     }
 
     async function enviarMensagemTimeline() {
-      const texto = mensagemInput.value.trim();
+      const textoBruto = mensagemInput.value;
+      const textoSanitizado = sanitizarEntrada(textoBruto);
       
-      if (!texto) return;
+      if (!textoSanitizado) return;
       
-      if (texto.length > 1024) {
+      if (textoSanitizado.length > 1024) {
         alert("A mensagem excede o limite máximo de 1024 caracteres.");
         return;
       }
 
       const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
 
-      const { encryptedContent, iv } = await criptografarTexto(texto);
+      try {
+        const { encryptedContent, iv } = await criptografarTexto(textoSanitizado);
 
-      const { error } = await supabaseClient
-        .from('timeline_messages')
-        .insert([{
-          author: meuNome,
-          encrypted_content: encryptedContent,
-          iv: iv
-        }]);
+        const { error } = await supabaseClient
+          .from('timeline_messages')
+          .insert([{
+            author: meuNome,
+            encrypted_content: encryptedContent,
+            iv: iv
+          }]);
 
-      if (error) {
-        alert("Erro ao enviar mensagem: " + error.message);
-        return;
+        if (error) {
+          alert("Erro ao enviar mensagem: " + error.message);
+          return;
+        }
+
+        mensagemInput.value = '';
+        atualizarContador();
+      } catch (err) {
+        console.error("Falha ao processar mensagem:", err);
       }
-
-      mensagemInput.value = '';
-      atualizarContador();
     }
 
     function atualizarContador() {
@@ -266,15 +288,27 @@
         ? new Date(hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
         : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      card.innerHTML = `
-        <div class="message-header-info">
-          <span class="message-author">${autor}${ehMinha ? ' (Você)' : ''}</span>
-          <span class="message-time">${horaFormatada}</span>
-        </div>
-        <div class="message-body"></div>
-      `;
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header-info';
 
-      card.querySelector('.message-body').innerText = texto;
+      const authorSpan = document.createElement('span');
+      authorSpan.className = 'message-author';
+      authorSpan.textContent = `${autor}${ehMinha ? ' (Você)' : ''}`;
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'message-time';
+      timeSpan.textContent = horaFormatada;
+
+      headerDiv.appendChild(authorSpan);
+      headerDiv.appendChild(timeSpan);
+
+      const bodyDiv = document.createElement('div');
+      bodyDiv.className = 'message-body';
+      // Renderização segura usando textContent contra injeção de scripts
+      bodyDiv.textContent = texto;
+
+      card.appendChild(headerDiv);
+      card.appendChild(bodyDiv);
 
       timelineMessages.appendChild(card);
       timelineMessages.scrollTop = timelineMessages.scrollHeight;
