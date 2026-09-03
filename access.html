@@ -153,13 +153,13 @@
       }
     }
 
-    // --- AUTENTICAÇÃO ---
-    function gerarNomeAleatorio() {
-      const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior'];
-      const palavra = palavras[Math.floor(Math.random() * palavras.length)];
-      const numero = Math.floor(1000 + Math.random() * 9000);
-      return `${palavra}${numero}`;
-    }
+function gerarNomeAleatorio() {
+  const palavras = ['Cat', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior'];
+  const palavra = palavras[Math.floor(Math.random() * palavras.length)];
+  // Gera um hash aleatório de 4 caracteres hexadecimais
+  const sufixoUnico = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${palavra}_${sufixoUnico}`;
+}
 
     async function fazerCadastro() {
       const email = document.getElementById('email').value;
