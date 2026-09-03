@@ -1,18 +1,36 @@
 /* ==========================================================================
-   STX - LAYOUT DE APLICAÇÃO EM TELA CHEIA (access.html)
+   STX - ESTILOS BASE E VARIÁVEIS
    ========================================================================== */
-
-/* Reset de tela cheia */
-.app-body-wrapper {
-  padding: 0;
-  margin: 0;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  background-color: #0f172a;
+:root {
+  --primary-color: #0d9488;
+  --primary-hover: #0f766e;
+  --secondary-color: #2563eb;
+  --bg-color: #0f172a;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-/* Container de Login Centralizado */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ==========================================================================
+   ESTILOS DE LOGIN E CARDS
+   ========================================================================== */
+.app-body-wrapper {
+  background-color: var(--bg-color);
+  min-height: 100vh;
+}
+
 .login-wrapper {
   display: flex;
   justify-content: center;
@@ -21,27 +39,72 @@
   width: 100vw;
 }
 
-/* Estrutura Principal da App */
+.card {
+  background: var(--card-bg);
+  padding: 2.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.card h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-main);
+}
+
+.card input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+}
+
+.card button {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.card button.btn-success {
+  background: #16a34a;
+}
+
+.oculto {
+  display: none !important;
+}
+
+/* ==========================================================================
+   LAYOUT DA APLICAÇÃO (access.html)
+   ========================================================================== */
 .app-layout {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
   background-color: #f8fafc;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
-/* Top Bar */
 .top-bar {
   height: 60px;
-  background: #0f172a;
+  background: var(--bg-color);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .top-bar-brand {
@@ -83,15 +146,8 @@
   border-radius: 6px;
   font-size: 0.8rem;
   cursor: pointer;
-  width: auto;
-  margin: 0;
 }
 
-.btn-logout:hover {
-  background: #be123c;
-}
-
-/* Corpo da Aplicação */
 .app-body {
   display: flex;
   flex: 1;
@@ -99,22 +155,19 @@
   overflow: hidden;
 }
 
-/* Timeline Central (Feed Ajustado) */
 .main-timeline {
   flex: 1;
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid var(--border-color);
 }
 
 .timeline-header {
   padding: 18px 32px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border-color);
   font-weight: 700;
   font-size: 1.2rem;
-  color: #1e293b;
-  background: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -137,10 +190,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  align-items: center; /* Centraliza as postagens no feed */
+  align-items: center;
 }
 
-/* Card da Mensagem (Estilo Feed Aberto) */
 .message-card {
   display: flex;
   flex-direction: column;
@@ -148,19 +200,14 @@
   padding: 18px 22px;
   border-radius: 12px;
   width: 100%;
-  max-width: 850px; /* Largura ideal de leitura */
-  border: 1px solid #e2e8f0;
+  max-width: 850px;
+  border: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.2s ease;
-}
-
-.message-card:hover {
-  border-color: #cbd5e1;
 }
 
 .message-card.my-message {
   background: #f8fafc;
-  border-left: 4px solid #0d9488; /* Destaque elegante para as próprias mensagens */
+  border-left: 4px solid var(--primary-color);
 }
 
 .message-header-info {
@@ -173,26 +220,24 @@
 .message-author {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f766e;
+  color: var(--primary-hover);
 }
 
 .message-time {
   font-size: 0.75rem;
-  color: #94a3b8;
-  font-weight: 500;
+  color: var(--text-muted);
 }
 
 .message-body {
-  font-size: 1.05rem; /* Fonte maior para melhor leitura */
+  font-size: 1.05rem;
   line-height: 1.5;
   color: #334155;
   word-break: break-word;
 }
 
-/* Área de Input da Timeline */
 .timeline-input-container {
   padding: 20px 32px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border-color);
   background: #ffffff;
   display: flex;
   flex-direction: column;
@@ -209,7 +254,6 @@
 
 .timeline-input-area input {
   flex: 1;
-  margin: 0;
   background: #f8fafc;
   font-size: 1rem;
   padding: 12px 16px;
@@ -217,27 +261,25 @@
   border-radius: 8px;
 }
 
-.timeline-input-area input:focus {
-  border-color: #0d9488;
-  outline: none;
-}
-
 .timeline-input-area button {
   width: auto;
   padding: 0 28px;
-  margin: 0;
   font-size: 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .char-counter {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
   text-align: right;
   width: 100%;
   max-width: 850px;
 }
 
-/* Sidebar Direita (Usuários Online) */
 .right-sidebar {
   width: 280px;
   background: #f8fafc;
@@ -249,7 +291,7 @@
 .sidebar-title {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 16px;
@@ -268,10 +310,6 @@
 
 .user-list {
   list-style: none;
-  padding: 0;
-  margin: 0;
-  overflow-y: auto;
-  flex: 1;
 }
 
 .user-item {
@@ -281,27 +319,20 @@
   padding: 10px 12px;
   border-radius: 8px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   margin-bottom: 8px;
   font-size: 0.9rem;
-  font-weight: 500;
-  color: #334155;
 }
 
 .user-avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #0d9488;
+  background: var(--primary-color);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
-}
-
-@media (max-width: 768px) {
-  .right-sidebar { display: none; }
-  .timeline-messages, .timeline-input-container { padding: 16px; }
 }
