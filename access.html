@@ -6,284 +6,10 @@
   <title>STX - Public Timeline Criptografada</title>
   <link rel="stylesheet" href="css/estilo.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      padding: 0;
-      margin: 0;
-      display: block;
-      height: 100vh;
-      overflow: hidden;
-      background-color: #0f172a;
-    }
-
-    .login-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    .app-layout {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      width: 100vw;
-      background-color: #f8fafc;
-      color: #0f172a;
-    }
-
-    /* TOP BAR */
-    .top-bar {
-      height: 60px;
-      background: #0f172a;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    }
-
-    .top-bar-brand {
-      font-weight: 900;
-      font-size: 1.4rem;
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, #38bdf8 0%, #0d9488 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .top-bar-info {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      font-size: 0.9rem;
-    }
-
-    .unread-badge {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      font-weight: 600;
-      font-size: 0.85rem;
-    }
-
-    .user-tag {
-      color: #e2e8f0;
-      font-weight: 500;
-    }
-
-    .btn-logout {
-      background: #e11d48;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      width: auto;
-      margin: 0;
-    }
-
-    .btn-logout:hover {
-      background: #be123c;
-    }
-
-    /* CORPO DO APP */
-    .app-body {
-      display: flex;
-      flex: 1;
-      height: calc(100vh - 60px);
-      overflow: hidden;
-    }
-
-    /* TIMELINE CENTRAL */
-    .main-timeline {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #ffffff;
-      border-right: 1px solid #e2e8f0;
-    }
-
-    .timeline-header {
-      padding: 16px 24px;
-      border-bottom: 1px solid #e2e8f0;
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: #1e293b;
-      background: #f8fafc;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .lock-icon {
-      font-size: 0.85rem;
-      color: #0d9488;
-      font-weight: 600;
-    }
-
-    .timeline-messages {
-      flex: 1;
-      padding: 20px 24px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .message-card {
-      display: flex;
-      flex-direction: column;
-      background: #f1f5f9;
-      padding: 12px 16px;
-      border-radius: 12px;
-      max-width: 80%;
-      align-self: flex-start;
-      border: 1px solid #e2e8f0;
-    }
-
-    .message-card.my-message {
-      align-self: flex-end;
-      background: #0d9488;
-      color: white;
-      border: none;
-    }
-
-    .message-card.my-message .message-author {
-      color: #99f6e4;
-    }
-
-    .message-author {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #0f766e;
-      margin-bottom: 4px;
-    }
-
-    .message-body {
-      font-size: 0.95rem;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-
-    .message-time {
-      font-size: 0.65rem;
-      opacity: 0.7;
-      margin-top: 4px;
-      align-self: flex-end;
-    }
-
-    /* INPUT AREA */
-    .timeline-input-container {
-      padding: 16px 24px;
-      border-top: 1px solid #e2e8f0;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .timeline-input-area {
-      display: flex;
-      gap: 12px;
-    }
-
-    .timeline-input-area input {
-      flex: 1;
-      margin: 0;
-      background: #f8fafc;
-    }
-
-    .timeline-input-area button {
-      width: auto;
-      padding: 0 24px;
-      margin: 0;
-    }
-
-    .char-counter {
-      font-size: 0.75rem;
-      color: #64748b;
-      text-align: right;
-    }
-
-    /* SIDEBAR DIREITA */
-    .right-sidebar {
-      width: 280px;
-      background: #f8fafc;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .sidebar-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .online-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #22c55e;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #22c55e;
-    }
-
-    .user-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .user-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #334155;
-    }
-
-    .user-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #0d9488;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-    }
-
-    @media (max-width: 768px) {
-      .right-sidebar { display: none; }
-    }
-  </style>
 </head>
-<body>
+<body class="app-body-wrapper">
 
-  <!-- LOGIN -->
+  <!-- TELA DE LOGIN -->
   <div id="wrapper-login" class="login-wrapper">
     <div class="card">
       <div id="tela-login">
@@ -297,9 +23,10 @@
     </div>
   </div>
 
-  <!-- APPLICATION -->
+  <!-- APLICAÇÃO PRINCIPAL -->
   <div id="app-layout" class="app-layout oculto">
     
+    <!-- Top Bar -->
     <header class="top-bar">
       <div class="top-bar-brand">STX</div>
       
@@ -314,8 +41,10 @@
       </div>
     </header>
 
+    <!-- Corpo do App -->
     <div class="app-body">
       
+      <!-- Feed Centralizado -->
       <main class="main-timeline">
         <div class="timeline-header">
           <span>Public Timeline</span>
@@ -323,7 +52,7 @@
         </div>
 
         <div id="timeline-messages" class="timeline-messages">
-          <!-- Mensagens descriptografadas aparecem aqui -->
+          <!-- Mensagens renderizadas centralizadas -->
         </div>
 
         <div class="timeline-input-container">
@@ -341,6 +70,7 @@
         </div>
       </main>
 
+      <!-- Sidebar Direita -->
       <aside class="right-sidebar">
         <div class="sidebar-title">
           <span class="online-dot"></span> Active Users (<span id="count-online">0</span>)
@@ -358,7 +88,6 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Chave secreta compartilhada para a Timeline pública
     const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
 
     const wrapperLogin = document.getElementById('wrapper-login');
@@ -466,7 +195,7 @@
       }
     }
 
-    // --- TIMELINE & CRIPTOGRAFIA ---
+    // --- TIMELINE ---
     async function carregarHistoricoTimeline() {
       timelineMessages.innerHTML = '';
       
@@ -501,10 +230,8 @@
 
       const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
 
-      // 1. Criptografa a mensagem no lado do cliente
       const { encryptedContent, iv } = await criptografarTexto(texto);
 
-      // 2. Grava no banco de dados
       const { error } = await supabaseClient
         .from('timeline_messages')
         .insert([{
@@ -534,12 +261,16 @@
       const card = document.createElement('div');
       card.className = ehMinha ? 'message-card my-message' : 'message-card';
 
-      const horaFormatada = hora ? new Date(hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const horaFormatada = hora 
+        ? new Date(hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       card.innerHTML = `
-        <span class="message-author">${autor}</span>
-        <span class="message-body"></span>
-        <span class="message-time">${horaFormatada}</span>
+        <div class="message-header-info">
+          <span class="message-author">${autor}${ehMinha ? ' (Você)' : ''}</span>
+          <span class="message-time">${horaFormatada}</span>
+        </div>
+        <div class="message-body"></div>
       `;
 
       card.querySelector('.message-body').innerText = texto;
@@ -552,7 +283,6 @@
     function conectarComunidade(meuUsername, isAdmin) {
       canalRealtime = supabaseClient.channel('stx_global_channel');
 
-      // Escuta novos registros inseridos no banco via Realtime
       supabaseClient
         .channel('schema-db-changes')
         .on(
@@ -573,7 +303,6 @@
         )
         .subscribe();
 
-      // Presença de usuários online
       canalRealtime.on('presence', { event: 'sync' }, () => {
         const state = canalRealtime.presenceState();
         atualizarListaSidebar(state, meuUsername);
