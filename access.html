@@ -112,9 +112,7 @@
     function sanitizarEntrada(input) {
       if (typeof input !== 'string') return '';
       return input
-        // Remove caracteres nulos e de controle invisíveis
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-        // Normaliza caracteres Unicode para evitar bypass de codificação
         .normalize('NFC')
         .trim();
     }
@@ -153,22 +151,29 @@
       }
     }
 
-function gerarNomeAleatorio() {
-  const palavras = ['Cat', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior'];
-  const palavra = palavras[Math.floor(Math.random() * palavras.length)];
-  // Gera um hash aleatório de 4 caracteres hexadecimais
-  const sufixoUnico = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `${palavra}_${sufixoUnico}`;
-}
+    // --- AUTENTICAÇÃO E NOME ÚNICO ---
+    function gerarNomeAleatorio() {
+      const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior', 'Cyber', 'Viper', 'Atlas'];
+      const palavra = palavras[Math.floor(Math.random() * palavras.length)];
+      
+      // Gera sufixo alfanumérico único para evitar colisões
+      const array = new Uint8Array(3);
+      crypto.getRandomValues(array);
+      const sufixoUnico = Array.from(array, byte => byte.toString(36).padStart(2, '0')).join('').substring(0, 5).toUpperCase();
+      
+      return `${palavra}_${sufixoUnico}`;
+    }
 
     async function fazerCadastro() {
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
       statusText.innerText = "Criando conta...";
 
+      const usernameGerado = gerarNomeAleatorio();
+
       const { data, error } = await supabaseClient.auth.signUp({
         email, password: senha,
-        options: { data: { username: gerarNomeAleatorio() } }
+        options: { data: { username: usernameGerado } }
       });
 
       if (error) statusText.innerText = "Erro: " + error.message;
@@ -304,7 +309,6 @@ function gerarNomeAleatorio() {
 
       const bodyDiv = document.createElement('div');
       bodyDiv.className = 'message-body';
-      // Renderização segura usando textContent contra injeção de scripts
       bodyDiv.textContent = texto;
 
       card.appendChild(headerDiv);
