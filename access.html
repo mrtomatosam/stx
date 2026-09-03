@@ -123,8 +123,8 @@
         <h2>STX Platform</h2>
         <input type="email" id="email" placeholder="Seu e-mail">
         <input type="password" id="senha" placeholder="Sua senha">
-        <button onclick="fazerLogin()">Entrar</button>
-        <button onclick="fazerCadastro()" class="btn-success">Cadastrar</button>
+        <button onclick="fazerLogin()">Enter</button>
+        <button onclick="fazerCadastro()" class="btn-success">Register</button>
       </div>
       <p id="status"></p>
     </div>
@@ -263,7 +263,7 @@
     async function fazerCadastro() {
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
-      statusText.innerText = "Criando conta...";
+      statusText.innerText = "Creating account...";
 
       const usernameGerado = gerarNomeAleatorio();
       const { data, error } = await supabaseClient.auth.signUp({
@@ -272,7 +272,7 @@
       });
 
       if (error) statusText.innerText = "Erro: " + error.message;
-      else statusText.innerText = "Cadastro realizado! Faça o login.";
+      else statusText.innerText = "Registration complete! Proced with login.";
     }
 
     async function fazerLogin() {
@@ -358,7 +358,7 @@
     }
 
     async function editarMensagem(id, textoAtual) {
-      const novoTexto = prompt("Edite sua mensagem:", textoAtual);
+      const novoTexto = prompt("Editing message:", textoAtual);
       if (novoTexto === null) return;
       
       const textoSanitizado = sanitizarEntrada(novoTexto);
@@ -371,14 +371,14 @@
           .update({ encrypted_content: encryptedContent, iv: iv })
           .eq('id', id);
 
-        if (error) alert("Erro ao editar: " + error.message);
+        if (error) alert("Editing error: " + error.message);
       } catch (err) {
         console.error("Erro na edição:", err);
       }
     }
 
     async function deletarMensagem(id) {
-      if (!confirm("Tem certeza que deseja apagar esta mensagem?")) return;
+      if (!confirm("Are you sure that you want to delete this message?")) return;
 
       const { error } = await supabaseClient
         .from('timeline_messages')
@@ -436,13 +436,13 @@
         const btnEdit = document.createElement('button');
         btnEdit.className = 'btn-action btn-edit';
         btnEdit.innerHTML = '✏️';
-        btnEdit.title = 'Editar mensagem';
+        btnEdit.title = 'Edit message';
         btnEdit.onclick = () => editarMensagem(id, texto);
 
         const btnDelete = document.createElement('button');
         btnDelete.className = 'btn-action btn-delete';
         btnDelete.innerHTML = '🗑️';
-        btnDelete.title = 'Deletar mensagem';
+        btnDelete.title = 'Delete message';
         btnDelete.onclick = () => deletarMensagem(id);
 
         actionsDiv.appendChild(btnEdit);
@@ -520,7 +520,7 @@
       countOnline.innerText = lista.length;
 
       if (lista.length === 0) {
-        listaOnline.innerHTML = '<li style="padding:10px; color:#94a3b8;">Nenhum usuário online</li>';
+        listaOnline.innerHTML = '<li style="padding:10px; color:#94a3b8;">Nobody's online</li>';
         return;
       }
 
