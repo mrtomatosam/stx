@@ -12,11 +12,11 @@
     #timeline-messages {
       display: flex !important;
       flex-direction: column !important;
-      align-items: center !important; /* Centraliza os cards */
+      align-items: center !important;
       gap: 14px !important;
       width: 100% !important;
-      max-width: 820px !important; /* Limita a largura para não ficar muito amplo */
-      margin: 0 auto !important; /* Centraliza o bloco na tela */
+      max-width: 820px !important;
+      margin: 0 auto !important;
       overflow-y: auto !important;
       padding: 15px 20px !important;
       box-sizing: border-box !important;
@@ -105,7 +105,7 @@
     }
     .btn-action:hover { background: #e2e8f0; }
 
-    /* AJUSTE NA CAIXA DE INPUT PARA ACOMPANHAR A LARGURA */
+    /* CAIXA DE INPUT CENTRALIZADA */
     .timeline-input-container {
       max-width: 820px !important;
       margin: 0 auto !important;
@@ -201,7 +201,7 @@
 
     let canalRealtime = null;
     let usuarioAtual = null;
-    let mensagensNaoLidas = 0;
+    let mensagensPrivadasNaoLidas = 0; // Reservado para o futuro chat privado
 
     function sanitizarEntrada(input) {
       if (typeof input !== 'string') return '';
@@ -249,7 +249,6 @@
       return `${palavra}_${sufixoUnico}`;
     }
 
-    // FORMATAÇÃO DE DATA EM PT-BR (DD/MM/YYYY HH:mm - 24H)
     function formatarDataHora(dataIso) {
       const d = dataIso ? new Date(dataIso) : new Date();
       const dia = String(d.getDate()).padStart(2, '0');
@@ -295,7 +294,7 @@
       await supabaseClient.auth.signOut();
       appLayout.classList.add('oculto');
       wrapperLogin.classList.remove('oculto');
-      statusText.innerText = "Logged out.";
+      statusText.innerText = "Você saiu.";
     }
 
     function atualizarInterface(user) {
@@ -415,9 +414,9 @@
       authorSpan.className = 'message-author';
       
       if (ehAdmin) {
-        authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">ADMIN MESSAGE</span>`;
+        authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Aviso Geral</span>`;
       } else {
-        authorSpan.textContent = `${autor}${ehMinha ? ' (YOU)' : ''}`;
+        authorSpan.textContent = `${autor}${ehMinha ? ' (Você)' : ''}`;
       }
 
       const rightHeaderDiv = document.createElement('div');
@@ -483,10 +482,7 @@
               const ehMinha = novaMsg.author === meuUsername;
               adicionarMensagemNaTela(novaMsg.id, novaMsg.author, textoClaro, ehMinha, novaMsg.created_at, Boolean(novaMsg.is_admin));
 
-              if (!ehMinha) {
-                mensagensNaoLidas++;
-                unreadCount.innerText = mensagensNaoLidas;
-              }
+              // NOTA: Mensagens da Timeline pública não afetam o 'unread messages' privado.
             } else if (payload.eventType === 'UPDATE') {
               const msgAtualizada = payload.new;
               const cardMsg = document.getElementById(`msg-${msgAtualizada.id}`);
@@ -530,7 +526,7 @@
 
       listaOnline.innerHTML = lista.map(nome => {
         const inicial = nome.charAt(0).toUpperCase();
-        const ehVoce = nome === meuUsername ? ' (YOU)' : '';
+        const ehVoce = nome === meuUsername ? ' (Você)' : '';
         return `
           <li class="user-item">
             <div class="user-avatar">${inicial}</div>
