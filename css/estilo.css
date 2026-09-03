@@ -248,14 +248,12 @@ body, html {
   border: 1px solid #bbf7d0;
 }
 
-.timeline-messages {
-  flex: 1;
-  padding: 24px 32px;
-  overflow-y: auto;
+/* Container da Timeline - Necessário para o suporte ao order:-1 */
+#timeline-messages {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  align-items: center;
+  gap: 12px;
+  overflow-y: auto;
 }
 
 .message-card {
@@ -431,16 +429,17 @@ body, html {
 .btn-delete:hover {
   background: #ffe4e6;
 }
-   /* Card de Mensagem do Admin (Aviso Geral) */
+/* Card de Mensagem do Admin (Aviso Geral) */
 .message-card.admin-notice {
-  background: #fffbebfb;
-  border: 2px solid #f59e0b;
+  background: #fffbebfb !important;
+  border: 2px solid #f59e0b !important;
+  border-left: 6px solid #f59e0b !important;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
-  order: -1; /* Força o card a subir para o topo no container Flex */
+  order: -1 !important; /* Move a mensagem para o topo da lista */
 }
 
 .message-card.admin-notice .message-author {
-  color: #b45309;
+  color: #b45309 !important;
   font-weight: 800;
 }
 
