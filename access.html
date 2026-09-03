@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STX - Plataforma de Comunicação</title>
+  <title>STX - Public Timeline Criptografada</title>
   <link rel="stylesheet" href="css/estilo.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Reset local para layout de aplicação em tela cheia */
     body {
       padding: 0;
       margin: 0;
@@ -17,7 +16,6 @@
       background-color: #0f172a;
     }
 
-    /* Container de Login (Centralizado) */
     .login-wrapper {
       display: flex;
       justify-content: center;
@@ -26,7 +24,6 @@
       width: 100vw;
     }
 
-    /* Estrutura Principal da App (Aós Login) */
     .app-layout {
       display: flex;
       flex-direction: column;
@@ -36,7 +33,7 @@
       color: #0f172a;
     }
 
-    /* 1. TOP BAR */
+    /* TOP BAR */
     .top-bar {
       height: 60px;
       background: #0f172a;
@@ -90,14 +87,13 @@
       cursor: pointer;
       width: auto;
       margin: 0;
-      box-shadow: none;
     }
 
     .btn-logout:hover {
       background: #be123c;
     }
 
-    /* 2. CORPO DO APP (Timeline + Sidebar) */
+    /* CORPO DO APP */
     .app-body {
       display: flex;
       flex: 1;
@@ -121,6 +117,15 @@
       font-size: 1.1rem;
       color: #1e293b;
       background: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .lock-icon {
+      font-size: 0.85rem;
+      color: #0d9488;
+      font-weight: 600;
     }
 
     .timeline-messages {
@@ -167,11 +172,24 @@
       word-break: break-word;
     }
 
-    /* INPUT DE POSTAGEM */
-    .timeline-input-area {
+    .message-time {
+      font-size: 0.65rem;
+      opacity: 0.7;
+      margin-top: 4px;
+      align-self: flex-end;
+    }
+
+    /* INPUT AREA */
+    .timeline-input-container {
       padding: 16px 24px;
       border-top: 1px solid #e2e8f0;
       background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .timeline-input-area {
       display: flex;
       gap: 12px;
     }
@@ -188,7 +206,13 @@
       margin: 0;
     }
 
-    /* 3. SIDEBAR DIREITA (Usuários Online) */
+    .char-counter {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-align: right;
+    }
+
+    /* SIDEBAR DIREITA */
     .right-sidebar {
       width: 280px;
       background: #f8fafc;
@@ -259,7 +283,7 @@
 </head>
 <body>
 
-  <!-- TELA DE LOGIN (Mostrada antes da autenticação) -->
+  <!-- LOGIN -->
   <div id="wrapper-login" class="login-wrapper">
     <div class="card">
       <div id="tela-login">
@@ -273,10 +297,9 @@
     </div>
   </div>
 
-  <!-- APLICAÇÃO COMPLETA (Mostrada após o login) -->
+  <!-- APPLICATION -->
   <div id="app-layout" class="app-layout oculto">
     
-    <!-- Top Bar -->
     <header class="top-bar">
       <div class="top-bar-brand">STX</div>
       
@@ -291,26 +314,33 @@
       </div>
     </header>
 
-    <!-- Corpo do App -->
     <div class="app-body">
       
-      <!-- Public Timeline Central -->
       <main class="main-timeline">
         <div class="timeline-header">
-          Public Timeline
+          <span>Public Timeline</span>
+          <span class="lock-icon">🔒 End-to-End Encrypted</span>
         </div>
 
         <div id="timeline-messages" class="timeline-messages">
-          <!-- Mensagens geradas via JavaScript -->
+          <!-- Mensagens descriptografadas aparecem aqui -->
         </div>
 
-        <div class="timeline-input-area">
-          <input type="text" id="mensagem-input" placeholder="Escreva uma mensagem na Timeline pública..." onkeypress="tratarTeclaEnter(event)">
-          <button onclick="enviarMensagemTimeline()">Publicar</button>
+        <div class="timeline-input-container">
+          <div class="timeline-input-area">
+            <input type="text" id="mensagem-input" 
+                   placeholder="Escreva uma mensagem na Timeline pública..." 
+                   maxlength="1024" 
+                   oninput="atualizarContador()" 
+                   onkeypress="tratarTeclaEnter(event)">
+            <button onclick="enviarMensagemTimeline()">Publicar</button>
+          </div>
+          <div class="char-counter">
+            <span id="char-count">0</span>/1024 caracteres
+          </div>
         </div>
       </main>
 
-      <!-- Sidebar Direita -->
       <aside class="right-sidebar">
         <div class="sidebar-title">
           <span class="online-dot"></span> Active Users (<span id="count-online">0</span>)
@@ -328,6 +358,9 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Chave secreta compartilhada para a Timeline pública
+    const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
+
     const wrapperLogin = document.getElementById('wrapper-login');
     const appLayout = document.getElementById('app-layout');
     const statusText = document.getElementById('status');
@@ -337,11 +370,47 @@
     const timelineMessages = document.getElementById('timeline-messages');
     const mensagemInput = document.getElementById('mensagem-input');
     const unreadCount = document.getElementById('unread-count');
+    const charCount = document.getElementById('char-count');
 
     let canalRealtime = null;
     let usuarioAtual = null;
     let mensagensNaoLidas = 0;
 
+    // --- MÓDULO DE CRIPTOGRAFIA (AES-GCM Web Crypto API) ---
+    async function obterChaveCriptografia() {
+      const enc = new TextEncoder();
+      const keyData = enc.encode(SECRET_KEY_STRING);
+      const hash = await crypto.subtle.digest('SHA-256', keyData);
+      return crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+    }
+
+    async function criptografarTexto(texto) {
+      const key = await obterChaveCriptografia();
+      const enc = new TextEncoder();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(texto));
+
+      return {
+        encryptedContent: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+        iv: btoa(String.fromCharCode(...iv))
+      };
+    }
+
+    async function descriptografarTexto(encryptedContentBase64, ivBase64) {
+      try {
+        const key = await obterChaveCriptografia();
+        const encrypted = Uint8Array.from(atob(encryptedContentBase64), c => c.charCodeAt(0));
+        const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+
+        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+        const dec = new TextDecoder();
+        return dec.decode(decrypted);
+      } catch (e) {
+        return "[Erro ao descriptografar mensagem]";
+      }
+    }
+
+    // --- AUTENTICAÇÃO ---
     function gerarNomeAleatorio() {
       const palavras = ['Gato', 'Ninja', 'Shadow', 'Fenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior'];
       const palavra = palavras[Math.floor(Math.random() * palavras.length)];
@@ -355,7 +424,7 @@
       statusText.innerText = "Criando conta...";
 
       const { data, error } = await supabaseClient.auth.signUp({
-        email: email, password: senha,
+        email, password: senha,
         options: { data: { username: gerarNomeAleatorio() } }
       });
 
@@ -393,25 +462,118 @@
         appLayout.classList.remove('oculto');
 
         conectarComunidade(username, isDbAdmin);
+        carregarHistoricoTimeline();
       }
     }
 
-    // CONECTA AO REALTIME PARA TIMELINE E SIDEBAR
+    // --- TIMELINE & CRIPTOGRAFIA ---
+    async function carregarHistoricoTimeline() {
+      timelineMessages.innerHTML = '';
+      
+      const { data, error } = await supabaseClient
+        .from('timeline_messages')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(50);
+
+      if (error) {
+        console.error("Erro ao carregar mensagens:", error);
+        return;
+      }
+
+      const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
+
+      for (const msg of data) {
+        const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
+        adicionarMensagemNaTela(msg.author, textoClaro, msg.author === meuNome, msg.created_at);
+      }
+    }
+
+    async function enviarMensagemTimeline() {
+      const texto = mensagemInput.value.trim();
+      
+      if (!texto) return;
+      
+      if (texto.length > 1024) {
+        alert("A mensagem excede o limite máximo de 1024 caracteres.");
+        return;
+      }
+
+      const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
+
+      // 1. Criptografa a mensagem no lado do cliente
+      const { encryptedContent, iv } = await criptografarTexto(texto);
+
+      // 2. Grava no banco de dados
+      const { error } = await supabaseClient
+        .from('timeline_messages')
+        .insert([{
+          author: meuNome,
+          encrypted_content: encryptedContent,
+          iv: iv
+        }]);
+
+      if (error) {
+        alert("Erro ao enviar mensagem: " + error.message);
+        return;
+      }
+
+      mensagemInput.value = '';
+      atualizarContador();
+    }
+
+    function atualizarContador() {
+      charCount.innerText = mensagemInput.value.length;
+    }
+
+    function tratarTeclaEnter(event) {
+      if (event.key === 'Enter') enviarMensagemTimeline();
+    }
+
+    function adicionarMensagemNaTela(autor, texto, ehMinha, hora) {
+      const card = document.createElement('div');
+      card.className = ehMinha ? 'message-card my-message' : 'message-card';
+
+      const horaFormatada = hora ? new Date(hora).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      card.innerHTML = `
+        <span class="message-author">${autor}</span>
+        <span class="message-body"></span>
+        <span class="message-time">${horaFormatada}</span>
+      `;
+
+      card.querySelector('.message-body').innerText = texto;
+
+      timelineMessages.appendChild(card);
+      timelineMessages.scrollTop = timelineMessages.scrollHeight;
+    }
+
+    // --- REALTIME & PRESENÇA ---
     function conectarComunidade(meuUsername, isAdmin) {
       canalRealtime = supabaseClient.channel('stx_global_channel');
 
-      // 1. Escuta novas mensagens publicadas na Timeline
-      canalRealtime.on('broadcast', { event: 'nova_mensagem' }, (payload) => {
-        adicionarMensagemNaTela(payload.autor, payload.texto, payload.autor === meuUsername);
-        
-        // Se a mensagem veio de outra pessoa, incrementa o contador de unread
-        if (payload.autor !== meuUsername) {
-          mensagensNaoLidas++;
-          unreadCount.innerText = mensagensNaoLidas;
-        }
-      });
+      // Escuta novos registros inseridos no banco via Realtime
+      supabaseClient
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'timeline_messages' },
+          async (payload) => {
+            const novaMsg = payload.new;
+            const textoClaro = await descriptografarTexto(novaMsg.encrypted_content, novaMsg.iv);
+            const ehMinha = novaMsg.author === meuUsername;
 
-      // 2. Escuta lista de presença de usuários online
+            adicionarMensagemNaTela(novaMsg.author, textoClaro, ehMinha, novaMsg.created_at);
+
+            if (!ehMinha) {
+              mensagensNaoLidas++;
+              unreadCount.innerText = mensagensNaoLidas;
+            }
+          }
+        )
+        .subscribe();
+
+      // Presença de usuários online
       canalRealtime.on('presence', { event: 'sync' }, () => {
         const state = canalRealtime.presenceState();
         atualizarListaSidebar(state, meuUsername);
@@ -422,39 +584,6 @@
           await canalRealtime.track({ username: meuUsername });
         }
       });
-    }
-
-    // Envio de mensagem na Timeline
-    function enviarMensagemTimeline() {
-      const texto = mensagemInput.value.trim();
-      if (!texto) return;
-
-      const meuNome = usuarioAtual.user_metadata?.username || "Anônimo";
-
-      canalRealtime.send({
-        type: 'broadcast',
-        event: 'nova_mensagem',
-        payload: { autor: meuNome, texto: texto }
-      });
-
-      mensagemInput.value = '';
-    }
-
-    function tratarTeclaEnter(event) {
-      if (event.key === 'Enter') enviarMensagemTimeline();
-    }
-
-    function adicionarMensagemNaTela(autor, texto, ehMinha) {
-      const card = document.createElement('div');
-      card.className = ehMinha ? 'message-card my-message' : 'message-card';
-
-      card.innerHTML = `
-        <span class="message-author">${autor}</span>
-        <span class="message-body">${texto}</span>
-      `;
-
-      timelineMessages.appendChild(card);
-      timelineMessages.scrollTop = timelineMessages.scrollHeight;
     }
 
     function atualizarListaSidebar(state, meuUsername) {
