@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STX - Plataforma</title>
   <link rel="stylesheet" href="css/estilo.css">
-  <!-- Biblioteca JS do Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    /* Estilos específicos para a Landing Page STX */
     .stx-container {
       display: flex;
       flex-direction: column;
@@ -15,6 +14,7 @@
       justify-content: center;
     }
 
+    /* Efeito de Logotipo Glow Neon / 3D para STX */
     .stx-logo {
       font-size: 5rem;
       font-weight: 900;
@@ -25,22 +25,30 @@
       -webkit-text-fill-color: transparent;
       text-shadow: 0 0 30px rgba(13, 148, 136, 0.4);
       animation: pulseGlow 4s ease-in-out infinite alternate;
+      position: relative;
     }
 
     @keyframes pulseGlow {
-      0% { filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4)); transform: scale(1); }
-      100% { filter: drop-shadow(0 0 35px rgba(13, 148, 136, 0.8)); transform: scale(1.03); }
+      0% {
+        filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4));
+        transform: scale(1);
+      }
+      100% {
+        filter: drop-shadow(0 0 35px rgba(13, 148, 136, 0.8));
+        transform: scale(1.03);
+      }
     }
 
     .stx-subtitle {
       font-size: 1rem;
       color: var(--text-muted);
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
       text-transform: uppercase;
       letter-spacing: 3px;
       font-weight: 600;
     }
 
+    /* Botão com efeito de iluminação no hover */
     .btn-entrar {
       display: inline-block;
       width: 100%;
@@ -55,62 +63,16 @@
       text-align: center;
       box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
       transition: all 0.3s ease;
-      margin-bottom: 1.5rem;
     }
 
     .btn-entrar:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+      background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
     }
 
-    /* Container dos Usuários Online */
-    .online-box {
-      width: 100%;
-      background: rgba(15, 23, 42, 0.05);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 1rem;
-      text-align: left;
-    }
-
-    .online-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--primary-color);
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .online-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #22c55e;
-      border-radius: 50%;
-      display: inline-block;
-      box-shadow: 0 0 8px #22c55e;
-    }
-
-    .online-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      max-height: 120px;
-      overflow-y: auto;
-    }
-
-    .online-list li {
-      font-size: 0.9rem;
-      padding: 4px 0;
-      color: var(--text-main);
-      border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
-    }
-
-    .online-list li:last-child {
-      border-bottom: none;
+    .btn-entrar:active {
+      transform: translateY(-1px);
     }
   </style>
 </head>
@@ -121,78 +83,7 @@
     <p class="stx-subtitle">Sistema Integrado</p>
     
     <a href="access.html" class="btn-entrar">Acessar Plataforma</a>
-
-    <!-- Painel de Usuários Online em Tempo Real -->
-    <div class="online-box">
-      <div class="online-title">
-        <span class="online-dot"></span> Usuários Online (<span id="count-online">0</span>)
-      </div>
-      <ul id="lista-online" class="online-list">
-        <li>Carregando...</li>
-      </ul>
-    </div>
   </div>
 
-  <script>
-    // 1. CONEXÃO COM O SUPABASE
-    const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const listaOnline = document.getElementById('lista-online');
-    const countOnline = document.getElementById('count-online');
-
-    // 2. CONFIGURAR O CANAL DE PRESENÇA (REALTIME)
-    async function iniciarPresenca() {
-      // Verifica se a pessoa na página está logada
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      const user = session?.user;
-
-      const isDbAdmin = user?.user_metadata?.role === 'admin';
-      const username = user?.user_metadata?.username;
-
-      // Cria a sala "global_online"
-      const channel = supabaseClient.channel('global_online');
-
-      channel
-        .on('presence', { event: 'sync' }, () => {
-          const state = channel.presenceState();
-          atualizarListaOnline(state);
-        })
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            // Se o visitante estiver logado E NÃO for admin, envia a presença dele
-            if (user && !isDbAdmin && username) {
-              await channel.track({ username: username });
-            }
-          }
-        });
-    }
-
-    // 3. ATUALIZA A LISTA NA TELA
-    function atualizarListaOnline(state) {
-      const usernamesOnline = new Set();
-
-      // Extrai os usernames únicos conectados no momento
-      Object.values(state).forEach(presences => {
-        presences.forEach(p => {
-          if (p.username) usernamesOnline.add(p.username);
-        });
-      });
-
-      const listaArray = Array.from(usernamesOnline);
-      countOnline.innerText = listaArray.length;
-
-      if (listaArray.length === 0) {
-        listaOnline.innerHTML = '<li>Nenhum usuário logado no momento.</li>';
-      } else {
-        listaOnline.innerHTML = listaArray
-          .map(nome => `<li>👤 ${nome}</li>`)
-          .join('');
-      }
-    }
-
-    iniciarPresenca();
-  </script>
 </body>
 </html>
