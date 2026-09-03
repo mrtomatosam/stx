@@ -400,4 +400,35 @@ body, html {
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
+
+   /* Botões de Ação na Mensagem */
+.message-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-action {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-edit {
+  color: #0284c7;
+}
+.btn-edit:hover {
+  background: #e0f2fe;
+}
+
+.btn-delete {
+  color: #e11d48;
+}
+.btn-delete:hover {
+  background: #ffe4e6;
+}
 }
