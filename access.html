@@ -295,7 +295,7 @@
       await supabaseClient.auth.signOut();
       appLayout.classList.add('oculto');
       wrapperLogin.classList.remove('oculto');
-      statusText.innerText = "Você saiu.";
+      statusText.innerText = "Logged out.";
     }
 
     function atualizarInterface(user) {
@@ -417,7 +417,7 @@
       if (ehAdmin) {
         authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">ADMIN MESSAGE</span>`;
       } else {
-        authorSpan.textContent = `${autor}${ehMinha ? ' (Você)' : ''}`;
+        authorSpan.textContent = `${autor}${ehMinha ? ' (YOU)' : ''}`;
       }
 
       const rightHeaderDiv = document.createElement('div');
