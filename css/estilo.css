@@ -1,142 +1,307 @@
-:root {
-  --primary-color: #0d9488;       /* Verde Teal elegante */
-  --primary-hover: #0f766e;       /* Teal escuro para hover */
-  --secondary-color: #2563eb;     /* Azul moderno */
-  --secondary-hover: #1d4ed8;     /* Azul escuro para hover */
-  --success-color: #059669;       /* Verde para cadastro/sucesso */
-  --success-hover: #047857;
-  --danger-color: #e11d48;        /* Vermelho elegante para sair/logout */
-  --danger-hover: #be123c;
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);
-  --card-bg: rgba(255, 255, 255, 0.96);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
-  --input-bg: #f8fafc;
-  --focus-ring: rgba(13, 148, 136, 0.25);
-  --radius-lg: 16px;
-  --radius-md: 8px;
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
-  --transition-fast: all 0.2s ease-in-out;
-}
+/* ==========================================================================
+   STX - LAYOUT DE APLICAÇÃO EM TELA CHEIA (access.html)
+   ========================================================================== */
 
-/* Reset Global e Tipografia */
-* {
-  box-sizing: border-box;
-  margin: 0;
+/* Reset de tela cheia */
+.app-body-wrapper {
   padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #0f172a;
 }
 
-body {
-  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  min-height: 100vh;
+/* Container de Login Centralizado */
+.login-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--bg-gradient);
-  color: var(--text-main);
-  padding: 20px;
+  height: 100vh;
+  width: 100vw;
 }
 
-/* Card Principal (Container da Aplicação) */
-.card {
-  background: var(--card-bg);
-  backdrop-filter: blur(10px);
-  padding: 2.5rem 2rem;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: var(--transition-fast);
+/* Estrutura Principal da App */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 
-/* Títulos e Textos */
-h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 1.5rem;
-  letter-spacing: -0.5px;
-}
-
-p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-/* Campos de Entrada (Inputs) */
-input {
-  width: 100%;
-  padding: 12px 16px;
-  margin: 8px 0 16px 0;
-  background-color: var(--input-bg);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  color: var(--text-main);
-  outline: none;
-  transition: var(--transition-fast);
-}
-
-input:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px var(--focus-ring);
-  background-color: #ffffff;
-}
-
-input::placeholder {
-  color: #94a3b8;
-}
-
-/* Estilo Base de Botões */
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+/* Top Bar */
+.top-bar {
+  height: 60px;
+  background: #0f172a;
   color: #ffffff;
-  background-color: var(--primary-color);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
-button:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.15);
+.top-bar-brand {
+  font-weight: 900;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #38bdf8 0%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-button:active {
-  transform: translateY(0);
+.top-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.9rem;
 }
 
-/* Classes Utilitárias */
-.oculto {
-  display: none !important;
-}
-
-/* Status e Feedback */
-#status {
-  margin-top: 18px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--primary-hover);
-  min-height: 1.25rem;
-}
-
-#mensagem-usuario {
-  font-size: 1.1rem;
+.unread-badge {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
   font-weight: 600;
-  color: var(--primary-hover);
-  background-color: rgba(13, 148, 136, 0.1);
-  padding: 12px;
-  border-radius: var(--radius-md);
-  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+}
+
+.user-tag {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.btn-logout {
+  background: #e11d48;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  width: auto;
+  margin: 0;
+}
+
+.btn-logout:hover {
+  background: #be123c;
+}
+
+/* Corpo da Aplicação */
+.app-body {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+/* Timeline Central (Feed Ajustado) */
+.main-timeline {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+}
+
+.timeline-header {
+  padding: 18px 32px;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #1e293b;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lock-icon {
+  font-size: 0.85rem;
+  color: #0d9488;
+  font-weight: 600;
+  background: #f0fdf4;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+}
+
+.timeline-messages {
+  flex: 1;
+  padding: 24px 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center; /* Centraliza as postagens no feed */
+}
+
+/* Card da Mensagem (Estilo Feed Aberto) */
+.message-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  padding: 18px 22px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 850px; /* Largura ideal de leitura */
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease;
+}
+
+.message-card:hover {
+  border-color: #cbd5e1;
+}
+
+.message-card.my-message {
+  background: #f8fafc;
+  border-left: 4px solid #0d9488; /* Destaque elegante para as próprias mensagens */
+}
+
+.message-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.message-author {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.message-body {
+  font-size: 1.05rem; /* Fonte maior para melhor leitura */
+  line-height: 1.5;
+  color: #334155;
+  word-break: break-word;
+}
+
+/* Área de Input da Timeline */
+.timeline-input-container {
+  padding: 20px 32px;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.timeline-input-area {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 850px;
+}
+
+.timeline-input-area input {
+  flex: 1;
+  margin: 0;
+  background: #f8fafc;
+  font-size: 1rem;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.timeline-input-area input:focus {
+  border-color: #0d9488;
+  outline: none;
+}
+
+.timeline-input-area button {
+  width: auto;
+  padding: 0 28px;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.char-counter {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: right;
+  width: 100%;
+  max-width: 850px;
+}
+
+/* Sidebar Direita (Usuários Online) */
+.right-sidebar {
+  width: 280px;
+  background: #f8fafc;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.online-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+.user-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0d9488;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .right-sidebar { display: none; }
+  .timeline-messages, .timeline-input-container { padding: 16px; }
 }
