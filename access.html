@@ -458,84 +458,93 @@ async function carregarHistoricoTimeline() {
       if (event.key === 'Enter') enviarMensagemTimeline();
     }
 
-    function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
-      const tempoRestante = calcularTempoRestante(hora);
-      if (!tempoRestante) return; // Não adiciona na tela se já expirou
+function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
+  const tempoRestante = calcularTempoRestante(hora);
+  
+  // Se não for admin e já passou de 24h, ignora
+  if (!ehAdmin && !tempoRestante) return;
 
-      const card = document.createElement('div');
-      
-      let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
-      if (ehAdmin) cardClass += ' admin-notice';
-      
-      card.className = cardClass;
-      card.setAttribute('id', `msg-${id}`);
-      card.setAttribute('data-created-at', hora);
+  const card = document.createElement('div');
+  let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
+  if (ehAdmin) cardClass += ' admin-notice';
+  
+  card.className = cardClass;
+  card.setAttribute('id', `msg-${id}`);
+  card.setAttribute('data-created-at', hora);
 
-      const dataHoraFormatada = formatarDataHora(hora);
+  const dataHoraFormatada = formatarDataHora(hora);
 
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header-info';
+  const headerDiv = document.createElement('div');
+  headerDiv.className = 'message-header-info';
 
-      const authorSpan = document.createElement('span');
-      authorSpan.className = 'message-author';
-      
-      if (ehAdmin) {
-        authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Announcement</span>`;
-      } else {
-        authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
-      }
+  const authorSpan = document.createElement('span');
+  authorSpan.className = 'message-author';
+  
+  if (ehAdmin) {
+    authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Announcement</span>`;
+  } else {
+    authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
+  }
 
-      const metaDiv = document.createElement('div');
-      metaDiv.className = 'message-meta';
+  const metaDiv = document.createElement('div');
+  metaDiv.className = 'message-meta';
 
-      const timerSpan = document.createElement('span');
-      timerSpan.className = 'timer-badge';
-      timerSpan.textContent = `⏱️ ${tempoRestante}`;
+  const timerSpan = document.createElement('span');
+  timerSpan.className = 'timer-badge';
+  
+  // Define o selo do temporizador ou fixo permanente
+  if (ehAdmin) {
+    timerSpan.textContent = `📌 Permanent`;
+    timerSpan.style.background = `#fef3c7`;
+    timerSpan.style.color = `#b45309`;
+  } else {
+    timerSpan.textContent = `⏱️ ${tempoRestante}`;
+  }
 
-      const timeSpan = document.createElement('span');
-      timeSpan.className = 'message-time';
-      timeSpan.textContent = dataHoraFormatada;
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'message-time';
+  timeSpan.textContent = dataHoraFormatada;
 
-      metaDiv.appendChild(timerSpan);
-      metaDiv.appendChild(timeSpan);
+  metaDiv.appendChild(timerSpan);
+  metaDiv.appendChild(timeSpan);
 
-      if (ehMinha) {
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'message-actions';
+  if (ehMinha) {
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'message-actions';
 
-        const btnEdit = document.createElement('button');
-        btnEdit.className = 'btn-action btn-edit';
-        btnEdit.innerHTML = '✏️';
-        btnEdit.title = 'Edit message';
-        btnEdit.onclick = () => editarMensagem(id, texto);
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'btn-action btn-edit';
+    btnEdit.innerHTML = '✏️';
+    btnEdit.title = 'Edit message';
+    btnEdit.onclick = () => editarMensagem(id, texto);
 
-        const btnDelete = document.createElement('button');
-        btnDelete.className = 'btn-action btn-delete';
-        btnDelete.innerHTML = '🗑️';
-        btnDelete.title = 'Delete message';
-        btnDelete.onclick = () => deletarMensagem(id);
+    const btnDelete = document.createElement('button');
+    btnDelete.className = 'btn-action btn-delete';
+    btnDelete.innerHTML = '🗑️';
+    btnDelete.title = 'Delete message';
+    btnDelete.onclick = () => deletarMensagem(id);
 
-        actionsDiv.appendChild(btnEdit);
-        actionsDiv.appendChild(btnDelete);
-        metaDiv.appendChild(actionsDiv);
-      }
+    actionsDiv.appendChild(btnEdit);
+    actionsDiv.appendChild(btnDelete);
+    metaDiv.appendChild(actionsDiv);
+  }
 
-      headerDiv.appendChild(authorSpan);
-      headerDiv.appendChild(metaDiv);
+  headerDiv.appendChild(authorSpan);
+  headerDiv.appendChild(metaDiv);
 
-      const bodyDiv = document.createElement('div');
-      bodyDiv.className = 'message-body';
-      bodyDiv.textContent = texto;
+  const bodyDiv = document.createElement('div');
+  bodyDiv.className = 'message-body';
+  bodyDiv.textContent = texto;
 
-      card.appendChild(headerDiv);
-      card.appendChild(bodyDiv);
+  card.appendChild(headerDiv);
+  card.appendChild(bodyDiv);
 
-      timelineMessages.appendChild(card);
-      
-      if (!ehAdmin) {
-        timelineMessages.scrollTop = timelineMessages.scrollHeight;
-      }
-    }
+  timelineMessages.appendChild(card);
+  
+  if (!ehAdmin) {
+    timelineMessages.scrollTop = timelineMessages.scrollHeight;
+  }
+}
 
     function conectarComunidade(meuUsername, isAdmin) {
       canalRealtime = supabaseClient.channel('stx_global_channel');
