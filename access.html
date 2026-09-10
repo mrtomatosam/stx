@@ -368,28 +368,28 @@
       }
     }
 
-    async function carregarHistoricoTimeline() {
-      timelineMessages.innerHTML = '';
+async function carregarHistoricoTimeline() {
+  timelineMessages.innerHTML = '';
 
-      // Busca apenas mensagens publicadas nas últimas 24 horas
-      const limite24HorasAtras = new Date(Date.now() - ONE_DAY_MS).toISOString();
-      
-      const { data, error } = await supabaseClient
-        .from('timeline_messages')
-        .select('*')
-        .gte('created_at', limite24HorasAtras)
-        .order('created_at', { ascending: true })
-        .limit(50);
+  const limite24HorasAtras = new Date(Date.now() - ONE_DAY_MS).toISOString();
+  
+  // Busca mensagens de admin (sem restrição de tempo) OU mensagens de usuários normais dentro das 24h
+  const { data, error } = await supabaseClient
+    .from('timeline_messages')
+    .select('*')
+    .or(`is_admin.eq.true,created_at.gte.${limite24HorasAtras}`)
+    .order('created_at', { ascending: true })
+    .limit(100);
 
-      if (error) return;
+  if (error) return;
 
-      const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
+  const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
 
-      for (const msg of data) {
-        const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
-        adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, Boolean(msg.is_admin));
-      }
-    }
+  for (const msg of data) {
+    const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
+    adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, Boolean(msg.is_admin));
+  }
+}
 
     async function enviarMensagemTimeline() {
       const textoSanitizado = sanitizarEntrada(mensagemInput.value);
