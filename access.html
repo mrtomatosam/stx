@@ -78,10 +78,27 @@
       color: #334155;
     }
 
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .message-time {
       font-size: 0.78rem;
       color: #64748b;
       font-weight: 500;
+    }
+
+    /* BADGE DO TEMPORIZADOR */
+    .timer-badge {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      font-weight: 600;
     }
 
     .message-body {
@@ -150,7 +167,7 @@
       <main class="main-timeline">
         <div class="timeline-header">
           <span>Public Timeline</span>
-          <span class="lock-icon">🔒 End-to-End Encrypted</span>
+          <span class="lock-icon">🔒 End-to-End Encrypted (24h Auto-expire)</span>
         </div>
 
         <div id="timeline-messages" class="timeline-messages"></div>
@@ -187,6 +204,7 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 Horas em milissegundos
 
     const wrapperLogin = document.getElementById('wrapper-login');
     const appLayout = document.getElementById('app-layout');
@@ -201,7 +219,7 @@
 
     let canalRealtime = null;
     let usuarioAtual = null;
-    let mensagensPrivadasNaoLidas = 0; // Reserved for future private chat
+    let timerModuloInterval = null;
 
     function sanitizarEntrada(input) {
       if (typeof input !== 'string') return '';
@@ -260,6 +278,42 @@
       return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
     }
 
+    /* MÓDULO TEMPORIZADOR DE EXSPIRAÇÃO */
+    function calcularTempoRestante(dataIso) {
+      const dataCriacao = new Date(dataIso).getTime();
+      const agora = Date.now();
+      const decorrido = agora - dataCriacao;
+      const restante = ONE_DAY_MS - decorrido;
+
+      if (restante <= 0) return null;
+
+      const horas = Math.floor(restante / (1000 * 60 * 60));
+      const minutos = Math.floor((restante % (1000 * 60 * 60)) / (1000 * 60));
+
+      return `${horas}h ${minutos}m`;
+    }
+
+    function iniciarModuloTemporizador() {
+      if (timerModuloInterval) clearInterval(timerModuloInterval);
+
+      // Atualiza o contador regressivo e remove postagens expiradas a cada 30 segundos
+      timerModuloInterval = setInterval(() => {
+        const cards = document.querySelectorAll('.message-card');
+        cards.forEach(card => {
+          const createdAt = card.getAttribute('data-created-at');
+          if (createdAt) {
+            const restanteFormatted = calcularTempoRestante(createdAt);
+            if (!restanteFormatted) {
+              card.remove(); // Remove da interface se passou de 24h
+            } else {
+              const timerBadge = card.querySelector('.timer-badge');
+              if (timerBadge) timerBadge.textContent = `⏱️ ${restanteFormatted}`;
+            }
+          }
+        });
+      }, 30000);
+    }
+
     async function fazerCadastro() {
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
@@ -291,6 +345,7 @@
 
     async function fazerLogout() {
       if (canalRealtime) await canalRealtime.unsubscribe();
+      if (timerModuloInterval) clearInterval(timerModuloInterval);
       await supabaseClient.auth.signOut();
       appLayout.classList.add('oculto');
       wrapperLogin.classList.remove('oculto');
@@ -309,15 +364,20 @@
 
         conectarComunidade(username, isDbAdmin);
         carregarHistoricoTimeline();
+        iniciarModuloTemporizador();
       }
     }
 
     async function carregarHistoricoTimeline() {
       timelineMessages.innerHTML = '';
+
+      // Busca apenas mensagens publicadas nas últimas 24 horas
+      const limite24HorasAtras = new Date(Date.now() - ONE_DAY_MS).toISOString();
       
       const { data, error } = await supabaseClient
         .from('timeline_messages')
         .select('*')
+        .gte('created_at', limite24HorasAtras)
         .order('created_at', { ascending: true })
         .limit(50);
 
@@ -397,6 +457,9 @@
     }
 
     function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
+      const tempoRestante = calcularTempoRestante(hora);
+      if (!tempoRestante) return; // Não adiciona na tela se já expirou
+
       const card = document.createElement('div');
       
       let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
@@ -404,6 +467,7 @@
       
       card.className = cardClass;
       card.setAttribute('id', `msg-${id}`);
+      card.setAttribute('data-created-at', hora);
 
       const dataHoraFormatada = formatarDataHora(hora);
 
@@ -419,15 +483,19 @@
         authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
       }
 
-      const rightHeaderDiv = document.createElement('div');
-      rightHeaderDiv.style.display = 'flex';
-      rightHeaderDiv.style.alignItems = 'center';
-      rightHeaderDiv.style.gap = '10px';
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'message-meta';
+
+      const timerSpan = document.createElement('span');
+      timerSpan.className = 'timer-badge';
+      timerSpan.textContent = `⏱️ ${tempoRestante}`;
 
       const timeSpan = document.createElement('span');
       timeSpan.className = 'message-time';
       timeSpan.textContent = dataHoraFormatada;
-      rightHeaderDiv.appendChild(timeSpan);
+
+      metaDiv.appendChild(timerSpan);
+      metaDiv.appendChild(timeSpan);
 
       if (ehMinha) {
         const actionsDiv = document.createElement('div');
@@ -447,11 +515,11 @@
 
         actionsDiv.appendChild(btnEdit);
         actionsDiv.appendChild(btnDelete);
-        rightHeaderDiv.appendChild(actionsDiv);
+        metaDiv.appendChild(actionsDiv);
       }
 
       headerDiv.appendChild(authorSpan);
-      headerDiv.appendChild(rightHeaderDiv);
+      headerDiv.appendChild(metaDiv);
 
       const bodyDiv = document.createElement('div');
       bodyDiv.className = 'message-body';
@@ -481,8 +549,6 @@
               const textoClaro = await descriptografarTexto(novaMsg.encrypted_content, novaMsg.iv);
               const ehMinha = novaMsg.author === meuUsername;
               adicionarMensagemNaTela(novaMsg.id, novaMsg.author, textoClaro, ehMinha, novaMsg.created_at, Boolean(novaMsg.is_admin));
-
-              // NOTE: Public timeline messages do not affect private unread messages counter.
             } else if (payload.eventType === 'UPDATE') {
               const msgAtualizada = payload.new;
               const cardMsg = document.getElementById(`msg-${msgAtualizada.id}`);
