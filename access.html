@@ -293,26 +293,28 @@
       return `${horas}h ${minutos}m`;
     }
 
-    function iniciarModuloTemporizador() {
-      if (timerModuloInterval) clearInterval(timerModuloInterval);
+function iniciarModuloTemporizador() {
+  if (timerModuloInterval) clearInterval(timerModuloInterval);
 
-      // Atualiza o contador regressivo e remove postagens expiradas a cada 30 segundos
-      timerModuloInterval = setInterval(() => {
-        const cards = document.querySelectorAll('.message-card');
-        cards.forEach(card => {
-          const createdAt = card.getAttribute('data-created-at');
-          if (createdAt) {
-            const restanteFormatted = calcularTempoRestante(createdAt);
-            if (!restanteFormatted) {
-              card.remove(); // Remove da interface se passou de 24h
-            } else {
-              const timerBadge = card.querySelector('.timer-badge');
-              if (timerBadge) timerBadge.textContent = `⏱️ ${restanteFormatted}`;
-            }
-          }
-        });
-      }, 30000);
-    }
+  timerModuloInterval = setInterval(() => {
+    const cards = document.querySelectorAll('.message-card');
+    cards.forEach(card => {
+      // Ignora avisos de Admin (eles não expiram)
+      if (card.classList.contains('admin-notice')) return;
+
+      const createdAt = card.getAttribute('data-created-at');
+      if (createdAt) {
+        const restanteFormatted = calcularTempoRestante(createdAt);
+        if (!restanteFormatted) {
+          card.remove(); // Remove mensagens normais após 24h
+        } else {
+          const timerBadge = card.querySelector('.timer-badge');
+          if (timerBadge) timerBadge.textContent = `⏱️ ${restanteFormatted}`;
+        }
+      }
+    });
+  }, 30000);
+}
 
     async function fazerCadastro() {
       const email = document.getElementById('email').value;
