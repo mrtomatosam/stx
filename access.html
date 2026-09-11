@@ -399,46 +399,61 @@ function iniciarModuloTemporizador() {
   }, 30000);
 }
 
-    async function fazerCadastro() {
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
-      statusText.innerText = "Creating account...";
-
-// Exemplo no seu formulário de cadastro:
-const usernameGerado = document.getElementById('input-username').value.trim();
-const email = document.getElementById('input-email').value.trim();
-const password = document.getElementById('input-password').value;
-
-const { data, error } = await supabaseClient.auth.signUp({
-  email: email,
-  password: password,
-  options: {
-    // Aponta o retorno do e-mail para o GitHub Pages
-    emailRedirectTo: 'https://mrtomatosam.github.io/stx/access.html',
-    data: {
-      // A chave 'username' é a que a Trigger SQL 'handle_new_user' espera ler
-      username: usernameGerado 
-    }
+async function fazerCadastro() {
+  const emailInput = document.getElementById('email').value.trim();
+  const senhaInput = document.getElementById('senha').value;
+  
+  if (!emailInput || !senhaInput) {
+    statusText.innerText = "Please fill in both email and password.";
+    return;
   }
-});
 
-      if (error) statusText.innerText = "Error: " + error.message;
-      else statusText.innerText = "Account created! Please sign in.";
-    }
+  statusText.innerText = "Creating account...";
 
-    async function fazerLogin() {
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
-      statusText.innerText = "Authenticating...";
+  // Gera um nome de usuário automático baseado no e-mail
+  const usernameGerado = emailInput.split('@')[0];
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-      if (error) {
-        statusText.innerText = "Login error: " + error.message;
-      } else {
-        statusText.innerText = "";
-        atualizarInterface(data.user);
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: emailInput,
+    password: senhaInput,
+    options: {
+      emailRedirectTo: 'https://mrtomatosam.github.io/stx/access.html',
+      data: {
+        username: usernameGerado 
       }
     }
+  });
+
+  if (error) {
+    statusText.innerText = "Error: " + error.message;
+  } else {
+    statusText.innerText = "Account created! Check your email or sign in.";
+  }
+}
+
+async function fazerLogin() {
+  const emailInput = document.getElementById('email').value.trim();
+  const senhaInput = document.getElementById('senha').value;
+
+  if (!emailInput || !senhaInput) {
+    statusText.innerText = "Please enter your email and password.";
+    return;
+  }
+
+  statusText.innerText = "Authenticating...";
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+    email: emailInput, 
+    password: senhaInput 
+  });
+
+  if (error) {
+    statusText.innerText = "Login error: " + error.message;
+  } else {
+    statusText.innerText = "";
+    atualizarInterface(data.user);
+  }
+}
 
     async function fazerLogout() {
       if (canalRealtime) await canalRealtime.unsubscribe();
