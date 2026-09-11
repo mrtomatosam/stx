@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STX - Admin Control Panel</title>
+  <link rel="stylesheet" href="./css/estilo.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .admin-container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      font-family: system-ui, sans-serif;
+    }
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th { background: #f8fafc; color: #334155; }
+    .status-active { color: #16a34a; font-weight: 700; }
+    .status-suspended { color: #dc2626; font-weight: 700; }
+    .btn-action { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; }
+    .btn-warn { background: #f59e0b; color: white; }
+    .btn-del { background: #ef4444; color: white; }
+  </style>
+</head>
+<body>
+
+  <div class="admin-container">
+    <div class="admin-header">
+      <h2>⚙️ STX Admin Management Console</h2>
+      <a href="access.html" class="btn-action" style="background:#64748b; color:white; text-decoration:none;">Back to App</a>
+    </div>
+
+    <h3>Registered Users Management</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Joined Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body">
+        <tr><td colspan="4">Loading users...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function verificarPermissaoAdmin() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session || session.user.user_metadata?.role !== 'admin') {
+        alert("Access Denied: Admin privileges required.");
+        window.location.href = 'access.html';
+        return;
+      }
+      carregarUsuarios();
+    }
+
+    async function carregarUsuarios() {
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = '';
+
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="4">Error loading users: ${error.message}</td></tr>`;
+        return;
+      }
+
+      data.forEach(user => {
+        const tr = document.createElement('tr');
+        const isSuspended = user.is_suspended;
+
+        tr.innerHTML = `
+          <td><strong>${user.username}</strong></td>
+          <td>${new Date(user.created_at).toLocaleDateString()}</td>
+          <td><span class="${isSuspended ? 'status-suspended' : 'status-active'}">${isSuspended ? 'Suspended' : 'Active'}</span></td>
+          <td>
+            <button onclick="alternarSuspensao('${user.id}', ${isSuspended})" class="btn-action btn-warn">
+              ${isSuspended ? 'Reactivate' : 'Suspend'}
+            </button>
+            <button onclick="excluirUsuarioAdmin('${user.id}')" class="btn-action btn-del">Delete</button>
+            <a href="profile.html?u=${encodeURIComponent(user.username)}" class="btn-action" style="background:#0284c7; color:white; text-decoration:none;">View Profile</a>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function alternarSuspensao(userId, statusAtual) {
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({ is_suspended: !statusAtual })
+        .eq('id', userId);
+
+      if (error) alert("Error updating status: " + error.message);
+      else carregarUsuarios();
+    }
+
+    async function excluirUsuarioAdmin(userId) {
+      if (confirm("Delete this user account permanently?")) {
+        const { error } = await supabaseClient
+          .from('profiles')
+          .delete()
+          .eq('id', userId);
+
+        if (error) alert("Error deleting user: " + error.message);
+        else carregarUsuarios();
+      }
+    }
+
+    verificarPermissaoAdmin();
+  </script>
+</body>
+</html>
