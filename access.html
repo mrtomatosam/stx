@@ -429,30 +429,45 @@ function irParaMeuPerfil() {
       }
     }
 
-    async function fazerLogin() {
-      const emailInput = document.getElementById('email').value.trim();
-      const senhaInput = document.getElementById('senha').value;
+async function fazerLogin() {
+  const emailInput = document.getElementById('email').value.trim();
+  const senhaInput = document.getElementById('senha').value;
 
-      if (!emailInput || !senhaInput) {
-        statusText.innerText = "Please enter your email and password.";
-        return;
-      }
+  if (!emailInput || !senhaInput) {
+    statusText.innerText = "Please enter your email and password.";
+    return;
+  }
 
-      statusText.innerText = "Authenticating...";
+  statusText.innerText = "Authenticating...";
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ 
-        email: emailInput, 
-        password: senhaInput 
-      });
+  // 1. Tenta autenticar no Supabase Auth
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+    email: emailInput, 
+    password: senhaInput 
+  });
 
-      if (error) {
-        statusText.innerText = "Login error: " + error.message;
-      } else {
-        statusText.innerText = "";
-        atualizarInterface(data.user);
-      }
-    }
+  if (error) {
+    statusText.innerText = "Login error: " + error.message;
+    return;
+  }
 
+  // 2. Verifica se a conta está suspensa na tabela 'profiles'
+  const { data: profile, error: profileError } = await supabaseClient
+    .from('profiles')
+    .select('is_suspended')
+    .eq('id', data.user.id)
+    .single();
+
+  if (profile && profile.is_suspended) {
+    await supabaseClient.auth.signOut(); // Desloga o usuário imediatamente
+    statusText.innerText = "Your account has been suspended. Contact support.";
+    return;
+  }
+
+  // 3. Se estiver tudo OK, prossegue
+  statusText.innerText = "";
+  atualizarInterface(data.user);
+}
     async function fazerLogout() {
       if (canalRealtime) await canalRealtime.unsubscribe();
       if (timerModuloInterval) clearInterval(timerModuloInterval);
