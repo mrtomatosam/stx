@@ -462,30 +462,36 @@ function irParaMeuPerfil() {
       statusText.innerText = "You signed out.";
     }
 
-    function atualizarInterface(user) {
-      if (user) {
-        usuarioAtual = user;
-        const isDbAdmin = user.user_metadata?.role === 'admin';
-        const username = user.user_metadata?.username || user.email.split('@')[0];
+function atualizarInterface(user) {
+  if (user) {
+    usuarioAtual = user;
+    const isDbAdmin = user.user_metadata?.role === 'admin';
+    const username = user.user_metadata?.username || user.email.split('@')[0];
 
-        if (adminConsoleBtn) {
-          if (isDbAdmin) adminConsoleBtn.classList.remove('oculto');
-          else adminConsoleBtn.classList.add('oculto');
-        }
-
-        if (topbarUsername) {
-          topbarUsername.innerText = isDbAdmin ? `${username} (ADMIN)` : username;
-        }
-
-        wrapperLogin.classList.add('oculto');
-        appLayout.classList.remove('oculto');
-
-        conectarComunidade(username, isDbAdmin);
-        carregarHistoricoTimeline();
-        iniciarModuloTemporizador();
-      }
+    if (adminConsoleBtn) {
+      if (isDbAdmin) adminConsoleBtn.classList.remove('oculto');
+      else adminConsoleBtn.classList.add('oculto');
     }
 
+    if (topbarUsername) {
+      topbarUsername.innerText = isDbAdmin ? `${username} (ADMIN)` : username;
+    }
+
+    // Se for Admin, remove a indicação visual de clique no botão de perfil
+    const btnPerfil = document.querySelector('.btn-my-profile');
+    if (btnPerfil && isDbAdmin) {
+      btnPerfil.style.cursor = 'default';
+      btnPerfil.title = 'Administrator Account';
+    }
+
+    wrapperLogin.classList.add('oculto');
+    appLayout.classList.remove('oculto');
+
+    conectarComunidade(username, isDbAdmin);
+    carregarHistoricoTimeline();
+    iniciarModuloTemporizador();
+  }
+}
     async function carregarHistoricoTimeline() {
       timelineMessages.innerHTML = '';
       const limite24HorasAtras = new Date(Date.now() - ONE_DAY_MS).toISOString();
@@ -576,90 +582,98 @@ function irParaMeuPerfil() {
       if (event.key === 'Enter') enviarMensagemTimeline();
     }
 
-    function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
-      const tempoRestante = calcularTempoRestante(hora);
-      if (!ehAdmin && !tempoRestante) return;
+function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
+  const tempoRestante = calcularTempoRestante(hora);
+  if (!ehAdmin && !tempoRestante) return;
 
-      const card = document.createElement('div');
-      let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
-      if (ehAdmin) cardClass += ' admin-notice';
-      
-      card.className = cardClass;
-      card.setAttribute('id', `msg-${id}`);
-      card.setAttribute('data-created-at', hora);
+  const card = document.createElement('div');
+  
+  // Confirma se o usuário logado atualmente tem role de admin
+  const souAdmin = usuarioAtual?.user_metadata?.role === 'admin';
+  
+  // O usuário pode editar se a mensagem for dele OU se ele for administrador
+  const podeGerenciar = ehMinha || souAdmin;
 
-      const dataHoraFormatada = formatarDataHora(hora);
+  let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
+  if (ehAdmin) cardClass += ' admin-notice';
+  
+  card.className = cardClass;
+  card.setAttribute('id', `msg-${id}`);
+  card.setAttribute('data-created-at', hora);
 
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'message-header-info';
+  const dataHoraFormatada = formatarDataHora(hora);
 
-      const authorSpan = document.createElement('span');
-      authorSpan.className = 'message-author';
-      
-      if (ehAdmin) {
-        authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Announcement</span>`;
-      } else {
-        authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
-      }
+  const headerDiv = document.createElement('div');
+  headerDiv.className = 'message-header-info';
 
-      const metaDiv = document.createElement('div');
-      metaDiv.className = 'message-meta';
+  const authorSpan = document.createElement('span');
+  authorSpan.className = 'message-author';
+  
+  if (ehAdmin) {
+    authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Announcement</span>`;
+  } else {
+    authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
+  }
 
-      const timerSpan = document.createElement('span');
-      timerSpan.className = 'timer-badge';
-      
-      if (ehAdmin) {
-        timerSpan.textContent = `📌 Permanent`;
-        timerSpan.style.background = `#fef3c7`;
-        timerSpan.style.color = `#b45309`;
-      } else {
-        timerSpan.textContent = `⏱️ ${tempoRestante}`;
-      }
+  const metaDiv = document.createElement('div');
+  metaDiv.className = 'message-meta';
 
-      const timeSpan = document.createElement('span');
-      timeSpan.className = 'message-time';
-      timeSpan.textContent = dataHoraFormatada;
+  const timerSpan = document.createElement('span');
+  timerSpan.className = 'timer-badge';
+  
+  if (ehAdmin) {
+    timerSpan.textContent = `📌 Permanent`;
+    timerSpan.style.background = `#fef3c7`;
+    timerSpan.style.color = `#b45309`;
+  } else {
+    timerSpan.textContent = `⏱️ ${tempoRestante}`;
+  }
 
-      metaDiv.appendChild(timerSpan);
-      metaDiv.appendChild(timeSpan);
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'message-time';
+  timeSpan.textContent = dataHoraFormatada;
 
-      if (ehMinha) {
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'message-actions';
+  metaDiv.appendChild(timerSpan);
+  metaDiv.appendChild(timeSpan);
 
-        const btnEdit = document.createElement('button');
-        btnEdit.className = 'btn-action btn-edit';
-        btnEdit.innerHTML = '✏️';
-        btnEdit.title = 'Edit message';
-        btnEdit.onclick = () => editarMensagem(id, texto);
+  // Exibe os botões de editar e deletar se tiver permissão
+  if (podeGerenciar) {
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'message-actions';
 
-        const btnDelete = document.createElement('button');
-        btnDelete.className = 'btn-action btn-delete';
-        btnDelete.innerHTML = '🗑️';
-        btnDelete.title = 'Delete message';
-        btnDelete.onclick = () => deletarMensagem(id);
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'btn-action btn-edit';
+    btnEdit.innerHTML = '✏️';
+    btnEdit.title = 'Edit message';
+    btnEdit.onclick = () => editarMensagem(id, texto);
 
-        actionsDiv.appendChild(btnEdit);
-        actionsDiv.appendChild(btnDelete);
-        metaDiv.appendChild(actionsDiv);
-      }
+    const btnDelete = document.createElement('button');
+    btnDelete.className = 'btn-action btn-delete';
+    btnDelete.innerHTML = '🗑️';
+    btnDelete.title = 'Delete message';
+    btnDelete.onclick = () => deletarMensagem(id);
 
-      headerDiv.appendChild(authorSpan);
-      headerDiv.appendChild(metaDiv);
+    actionsDiv.appendChild(btnEdit);
+    actionsDiv.appendChild(btnDelete);
+    metaDiv.appendChild(actionsDiv);
+  }
 
-      const bodyDiv = document.createElement('div');
-      bodyDiv.className = 'message-body';
-      bodyDiv.textContent = texto;
+  headerDiv.appendChild(authorSpan);
+  headerDiv.appendChild(metaDiv);
 
-      card.appendChild(headerDiv);
-      card.appendChild(bodyDiv);
+  const bodyDiv = document.createElement('div');
+  bodyDiv.className = 'message-body';
+  bodyDiv.textContent = texto;
 
-      timelineMessages.appendChild(card);
-      
-      if (!ehAdmin) {
-        timelineMessages.scrollTop = timelineMessages.scrollHeight;
-      }
-    }
+  card.appendChild(headerDiv);
+  card.appendChild(bodyDiv);
+
+  timelineMessages.appendChild(card);
+  
+  if (!ehAdmin) {
+    timelineMessages.scrollTop = timelineMessages.scrollHeight;
+  }
+}
 
     function conectarComunidade(meuUsername, isAdmin) {
       canalRealtime = supabaseClient.channel('stx_global_channel');
