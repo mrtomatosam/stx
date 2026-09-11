@@ -297,7 +297,18 @@
     const mensagemInput = document.getElementById('mensagem-input');
     const unreadCount = document.getElementById('unread-count');
     const charCount = document.getElementById('char-count');
+    const topbarUsername = document.getElementById('topbar-username');
+    const adminConsoleBtn = document.getElementById('admin-console-btn');
 
+function irParaMeuPerfil() {
+  if (!usuarioAtual) return;
+  
+  // Pega o username do metadata ou o prefixo do e-mail
+  const username = usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0];
+  window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
+}
+
+    
     let canalRealtime = null;
     let usuarioAtual = null;
     let timerModuloInterval = null;
@@ -464,21 +475,31 @@ async function fazerLogin() {
       statusText.innerText = "You signed out.";
     }
 
-    function atualizarInterface(user) {
-      if (user) {
-        usuarioAtual = user;
-        const isDbAdmin = user.user_metadata?.role === 'admin';
-        const username = user.user_metadata?.username || user.email;
+function atualizarInterface(user) {
+  if (user) {
+    usuarioAtual = user;
+    const isDbAdmin = user.user_metadata?.role === 'admin';
+    const username = user.user_metadata?.username || user.email.split('@')[0];
 
-        topbarUsername.innerText = isDbAdmin ? `${username} (ADMIN)` : username;
-        wrapperLogin.classList.add('oculto');
-        appLayout.classList.remove('oculto');
-
-        conectarComunidade(username, isDbAdmin);
-        carregarHistoricoTimeline();
-        iniciarModuloTemporizador();
-      }
+    // Exibe/Oculta o botão Admin Console
+    if (adminConsoleBtn) {
+      if (isDbAdmin) adminConsoleBtn.classList.remove('oculto');
+      else adminConsoleBtn.classList.add('oculto');
     }
+
+    // Atualiza o texto do usuário no topo
+    if (topbarUsername) {
+      topbarUsername.innerText = isDbAdmin ? `${username} (ADMIN)` : username;
+    }
+
+    wrapperLogin.classList.add('oculto');
+    appLayout.classList.remove('oculto');
+
+    conectarComunidade(username, isDbAdmin);
+    carregarHistoricoTimeline();
+    iniciarModuloTemporizador();
+  }
+}
 
 async function carregarHistoricoTimeline() {
   timelineMessages.innerHTML = '';
