@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STX - User Profile</title>
+  <link rel="stylesheet" href="./css/estilo.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .profile-container {
+      max-width: 820px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+    .avatar-wrapper {
+      position: relative;
+      width: 128px;
+      height: 128px;
+    }
+    .avatar-img {
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #0d9488;
+      background-color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: #64748b;
+    }
+    .avatar-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .profile-info { flex: 1; }
+    .profile-username {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 6px 0;
+    }
+    .badge-admin {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fcd34d;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 20px 0 10px 0;
+      border-left: 4px solid #0d9488;
+      padding-left: 8px;
+    }
+    .about-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      white-space: pre-wrap;
+      color: #334155;
+    }
+    .social-links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      color: #0f172a;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .social-btn:hover { background: #e2e8f0; }
+    .recent-messages-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .recent-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+    }
+    .recent-card .time {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+    .gallery-placeholder {
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      color: #64748b;
+      background: #fafafa;
+    }
+    .btn-edit { background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    .btn-danger { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    .btn-secondary { background: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    .edit-form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .edit-form-group input, .edit-form-group textarea {
+      padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;
+    }
+    .oculto { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="profile-container">
+    <div style="display: flex; justify: space-between; margin-bottom: 15px;">
+      <a href="access.html" class="btn-secondary">← Back to Timeline</a>
+      <div id="owner-actions" class="oculto">
+        <button id="btn-toggle-edit" onclick="alternarModoEdicao()" class="btn-edit">Edit Profile</button>
+        <button onclick="excluirPropriaConta()" class="btn-danger">Delete Account</button>
+      </div>
+    </div>
+
+    <!-- VIEW MODE -->
+    <div id="view-mode">
+      <div class="profile-header">
+        <div class="avatar-wrapper">
+          <div id="avatar-container" class="avatar-img">👤</div>
+        </div>
+        <div class="profile-info">
+          <h1 id="view-username" class="profile-username">Loading...</h1>
+          <span id="view-admin-badge" class="badge-admin oculto">Administrator</span>
+          <p id="view-joined" style="font-size: 0.8rem; color: #64748b; margin-top: 4px;"></p>
+        </div>
+      </div>
+
+      <div class="section-title">About user</div>
+      <div id="view-about" class="about-box">No description provided yet.</div>
+
+      <div class="section-title">Social / External Links</div>
+      <div id="view-socials" class="social-links-grid">
+        <span style="color: #94a3b8; font-size: 0.9rem;">No links configured.</span>
+      </div>
+
+      <div class="section-title">Recent Timeline Posts</div>
+      <div id="view-recent-posts" class="recent-messages-list">
+        <p style="color: #94a3b8;">Loading recent messages...</p>
+      </div>
+
+      <div class="section-title">Photo Gallery (Coming Soon)</div>
+      <div class="gallery-placeholder">
+        📷 Gallery module will be available soon.
+      </div>
+    </div>
+
+    <!-- EDIT MODE (OWNER ONLY) -->
+    <div id="edit-mode" class="oculto">
+      <h2>Edit Profile</h2>
+      
+      <div class="edit-form-group">
+        <label>Profile Avatar (Resized to 128x128 & Encrypted):</label>
+        <input type="file" id="input-avatar-file" accept="image/*" onchange="processarEUploadAvatar(event)">
+        <div class="avatar-actions">
+          <button type="button" onclick="removerAvatar()" class="btn-danger">Remove Avatar</button>
+        </div>
+      </div>
+
+      <div class="edit-form-group">
+        <label>About User:</label>
+        <textarea id="edit-about" rows="4" maxlength="500"></textarea>
+      </div>
+
+      <div class="section-title">Social Links</div>
+      <div class="edit-form-group"><label>Website:</label><input type="url" id="edit-link-website" placeholder="https://..."></div>
+      <div class="edit-form-group"><label>GitHub:</label><input type="url" id="edit-link-github" placeholder="https://github.com/..."></div>
+      <div class="edit-form-group"><label>Twitter / X:</label><input type="url" id="edit-link-twitter" placeholder="https://x.com/..."></div>
+      <div class="edit-form-group"><label>LinkedIn:</label><input type="url" id="edit-link-linkedin" placeholder="https://linkedin.com/in/..."></div>
+
+      <div style="margin-top: 15px; display: flex; gap: 10px;">
+        <button onclick="salvarPerfil()" class="btn-edit">Save Changes</button>
+        <button onclick="alternarModoEdicao()" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
+
+    let targetUsername = new URLSearchParams(window.location.search).get('u');
+    let currentUser = null;
+    let targetProfile = null;
+    let encryptedAvatarData = null;
+
+    async function obterChaveCriptografia() {
+      const enc = new TextEncoder();
+      const keyData = enc.encode(SECRET_KEY_STRING);
+      const hash = await crypto.subtle.digest('SHA-256', keyData);
+      return crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+    }
+
+    async function criptografarTexto(texto) {
+      const key = await obterChaveCriptografia();
+      const enc = new TextEncoder();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(texto));
+      return {
+        encryptedContent: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+        iv: btoa(String.fromCharCode(...iv))
+      };
+    }
+
+    async function descriptografarTexto(encryptedContentBase64, ivBase64) {
+      try {
+        const key = await obterChaveCriptografia();
+        const encrypted = Uint8Array.from(atob(encryptedContentBase64), c => c.charCodeAt(0));
+        const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+        return new TextDecoder().decode(decrypted);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function carregarPerfil() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      currentUser = session ? session.user : null;
+
+      if (!targetUsername && currentUser) {
+        targetUsername = currentUser.user_metadata?.username || currentUser.email.split('@')[0];
+      }
+
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('username', targetUsername)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('view-username').innerText = 'User Not Found';
+        return;
+      }
+
+      targetProfile = data;
+      const isOwner = currentUser && currentUser.id === targetProfile.id;
+
+      if (isOwner) {
+        document.getElementById('owner-actions').classList.remove('oculto');
+      }
+
+      document.getElementById('view-username').innerText = targetProfile.username;
+      document.getElementById('view-about').innerText = targetProfile.about || 'No description provided yet.';
+      document.getElementById('view-joined').innerText = `Member since: ${new Date(targetProfile.created_at).toLocaleDateString()}`;
+
+      // Render Avatar Criptografado
+      if (targetProfile.avatar_encrypted && targetProfile.avatar_iv) {
+        const avatarBase64 = await descriptografarTexto(targetProfile.avatar_encrypted, targetProfile.avatar_iv);
+        if (avatarBase64) {
+          document.getElementById('avatar-container').innerHTML = `<img src="${avatarBase64}" class="avatar-img" alt="Avatar">`;
+        }
+      }
+
+      // Render Redes Sociais
+      const socials = targetProfile.social_links || {};
+      const socialContainer = document.getElementById('view-socials');
+      socialContainer.innerHTML = '';
+      let countLinks = 0;
+
+      for (const [key, url] of Object.entries(socials)) {
+        if (url) {
+          countLinks++;
+          const a = document.createElement('a');
+          a.className = 'social-btn';
+          a.innerText = `🔗 ${key.toUpperCase()}`;
+          a.onclick = (e) => {
+            e.preventDefault();
+            if (confirm("WARNING: You're going to visit an external site. Are you sure?")) {
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          };
+          socialContainer.appendChild(a);
+        }
+      }
+      if (countLinks === 0) socialContainer.innerHTML = '<span style="color: #94a3b8;">No links configured.</span>';
+
+      carregarMensagensRecentes();
+    }
+
+    async function carregarMensagensRecentes() {
+      const recentBox = document.getElementById('view-recent-posts');
+      recentBox.innerHTML = '';
+
+      const { data, error } = await supabaseClient
+        .from('timeline_messages')
+        .select('*')
+        .eq('author', targetProfile.username)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error || !data || data.length === 0) {
+        recentBox.innerHTML = '<p style="color: #94a3b8;">No recent timeline posts.</p>';
+        return;
+      }
+
+      for (const msg of data) {
+        const texto = await descriptografarTexto(msg.encrypted_content, msg.iv);
+        const card = document.createElement('div');
+        card.className = 'recent-card';
+        card.innerHTML = `<div>${texto || '[Encrypted Content]'}</div><div class="time">${new Date(msg.created_at).toLocaleString()}</div>`;
+        recentBox.appendChild(card);
+      }
+    }
+
+    function processarEUploadAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 128;
+          canvas.height = 128;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 128, 128);
+          
+          const resizedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+          criptografarTexto(resizedBase64).then(res => {
+            encryptedAvatarData = res;
+            alert("Avatar processed and encrypted locally! Click 'Save Changes' to apply.");
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function removerAvatar() {
+      if (confirm("Remove profile picture?")) {
+        encryptedAvatarData = { encryptedContent: '', iv: '' };
+        alert("Avatar will be removed upon saving.");
+      }
+    }
+
+    function alternarModoEdicao() {
+      const viewMode = document.getElementById('view-mode');
+      const editMode = document.getElementById('edit-mode');
+      const isEditing = !editMode.classList.contains('oculto');
+
+      if (isEditing) {
+        editMode.classList.add('oculto');
+        viewMode.classList.remove('oculto');
+      } else {
+        document.getElementById('edit-about').value = targetProfile.about || '';
+        const socials = targetProfile.social_links || {};
+        document.getElementById('edit-link-website').value = socials.website || '';
+        document.getElementById('edit-link-github').value = socials.github || '';
+        document.getElementById('edit-link-twitter').value = socials.twitter || '';
+        document.getElementById('edit-link-linkedin').value = socials.linkedin || '';
+
+        viewMode.classList.add('oculto');
+        editMode.classList.remove('oculto');
+      }
+    }
+
+    async function salvarPerfil() {
+      const about = document.getElementById('edit-about').value;
+      const socials = {
+        website: document.getElementById('edit-link-website').value.trim(),
+        github: document.getElementById('edit-link-github').value.trim(),
+        twitter: document.getElementById('edit-link-twitter').value.trim(),
+        linkedin: document.getElementById('edit-link-linkedin').value.trim()
+      };
+
+      const payload = {
+        about: about,
+        social_links: socials,
+        updated_at: new Date().toISOString()
+      };
+
+      if (encryptedAvatarData) {
+        payload.avatar_encrypted = encryptedAvatarData.encryptedContent;
+        payload.avatar_iv = encryptedAvatarData.iv;
+      }
+
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update(payload)
+        .eq('id', currentUser.id);
+
+      if (error) {
+        alert("Error updating profile: " + error.message);
+      } else {
+        alert("Profile updated successfully!");
+        window.location.reload();
+      }
+    }
+
+    async function excluirPropriaConta() {
+      if (confirm("CRITICAL WARNING: Are you sure you want to delete your account? This action is permanent!")) {
+        const { error } = await supabaseClient.from('profiles').delete().eq('id', currentUser.id);
+        if (!error) {
+          await supabaseClient.auth.signOut();
+          window.location.href = 'access.html';
+        } else {
+          alert("Error deleting account: " + error.message);
+        }
+      }
+    }
+
+    carregarPerfil();
+  </script>
+</body>
+</html>
