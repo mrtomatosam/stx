@@ -279,7 +279,7 @@
     </div>
   </div>
 
-  <script>
+ <script>
     const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -287,26 +287,30 @@
     const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
     const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 Horas em milissegundos
 
+    // Mapeamento dos elementos DOM
     const wrapperLogin = document.getElementById('wrapper-login');
     const appLayout = document.getElementById('app-layout');
     const statusText = document.getElementById('status');
     const topbarUsername = document.getElementById('topbar-username');
+    const adminConsoleBtn = document.getElementById('admin-console-btn');
     const listaOnline = document.getElementById('lista-online');
     const countOnline = document.getElementById('count-online');
     const timelineMessages = document.getElementById('timeline-messages');
     const mensagemInput = document.getElementById('mensagem-input');
     const unreadCount = document.getElementById('unread-count');
     const charCount = document.getElementById('char-count');
-    const topbarUsername = document.getElementById('topbar-username');
-    const adminConsoleBtn = document.getElementById('admin-console-btn');
 
-function irParaMeuPerfil() {
-  if (!usuarioAtual) return;
-  
-  // Pega o username do metadata ou o prefixo do e-mail
-  const username = usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0];
-  window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
-}
+    // Variáveis Globais de Controle
+    let canalRealtime = null;
+    let usuarioAtual = null;
+    let timerModuloInterval = null;
+
+    // Função de Redirecionamento
+    function irParaMeuPerfil() {
+      if (!usuarioAtual) return;
+      const username = usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0];
+      window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
+    }
 
     
     let canalRealtime = null;
