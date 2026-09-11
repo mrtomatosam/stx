@@ -402,11 +402,23 @@ function iniciarModuloTemporizador() {
       const senha = document.getElementById('senha').value;
       statusText.innerText = "Creating account...";
 
-      const usernameGerado = gerarNomeAleatorio();
-      const { data, error } = await supabaseClient.auth.signUp({
-        email, password: senha,
-        options: { data: { username: usernameGerado } }
-      });
+// Exemplo no seu formulário de cadastro:
+const usernameGerado = document.getElementById('input-username').value.trim();
+const email = document.getElementById('input-email').value.trim();
+const password = document.getElementById('input-password').value;
+
+const { data, error } = await supabaseClient.auth.signUp({
+  email: email,
+  password: password,
+  options: {
+    // Aponta o retorno do e-mail para o GitHub Pages
+    emailRedirectTo: 'https://mrtomatosam.github.io/stx/access.html',
+    data: {
+      // A chave 'username' é a que a Trigger SQL 'handle_new_user' espera ler
+      username: usernameGerado 
+    }
+  }
+});
 
       if (error) statusText.innerText = "Error: " + error.message;
       else statusText.innerText = "Account created! Please sign in.";
