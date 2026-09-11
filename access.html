@@ -172,18 +172,27 @@
   <div id="app-layout" class="app-layout oculto">
     
     <header class="top-bar">
-      <div class="top-bar-brand">STX</div>
-      <div class="top-bar-info">
-        <div class="unread-badge">
-          ✉️ <span id="unread-count">0</span> unread messages
-        </div>
-        <div class="user-tag">
-          Logged as <strong id="topbar-username">...</strong>
-        </div>
-        <button onclick="fazerLogout()" class="btn-logout">Logout</button>
-      </div>
-    </header>
+  <div class="top-bar-brand" onclick="window.location.reload()" style="cursor: pointer;">STX</div>
+  
+  <div class="top-bar-info">
+    <div class="unread-badge">
+      ✉️ <span id="unread-count">0</span> unread messages
+    </div>
 
+    <!-- Botão visível apenas para Administradores -->
+    <a id="admin-console-btn" href="admin.html" class="btn-admin-nav oculto">⚙️ Admin Console</a>
+
+    <!-- Menu do Usuário Logado -->
+    <div class="user-profile-menu">
+      <button onclick="irParaMeuPerfil()" class="btn-my-profile" title="View & Edit My Profile">
+        <span id="topbar-avatar-preview">👤</span>
+        <strong id="topbar-username">...</strong>
+      </button>
+    </div>
+
+    <button onclick="fazerLogout()" class="btn-logout">Logout</button>
+  </div>
+</header>
     <div class="app-body">
       <main class="main-timeline">
         <div class="timeline-header">
