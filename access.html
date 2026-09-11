@@ -798,10 +798,26 @@ function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = fals
       });
     }
 
-    async function checarSessao() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) atualizarInterface(session.user);
+async function checarSessao() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  
+  if (session) {
+    // Consulta se o usuário atual foi suspenso
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('is_suspended')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profile && profile.is_suspended) {
+      await supabaseClient.auth.signOut();
+      statusText.innerText = "Your account is suspended.";
+      return;
     }
+
+    atualizarInterface(session.user);
+  }
+}
 
     checarSessao();
   </script>
