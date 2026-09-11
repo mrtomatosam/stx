@@ -285,9 +285,9 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 Horas em milissegundos
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-    // Mapeamento dos elementos DOM
+    // Elementos DOM
     const wrapperLogin = document.getElementById('wrapper-login');
     const appLayout = document.getElementById('app-layout');
     const statusText = document.getElementById('status');
@@ -300,22 +300,16 @@
     const unreadCount = document.getElementById('unread-count');
     const charCount = document.getElementById('char-count');
 
-    // Variáveis Globais de Controle
+    // Estado da Aplicação
     let canalRealtime = null;
     let usuarioAtual = null;
     let timerModuloInterval = null;
 
-    // Função de Redirecionamento
     function irParaMeuPerfil() {
       if (!usuarioAtual) return;
       const username = usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0];
       window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
     }
-
-    
-    let canalRealtime = null;
-    let usuarioAtual = null;
-    let timerModuloInterval = null;
 
     function sanitizarEntrada(input) {
       if (typeof input !== 'string') return '';
@@ -342,27 +336,18 @@
     }
 
     async function descriptografarTexto(encryptedContentBase64, ivBase64) {
-  try {
-    if (!encryptedContentBase64 || !ivBase64) return '[Mensagem não criptografada]';
-    
-    const key = await obterChaveCriptografia();
-    const encrypted = Uint8Array.from(atob(encryptedContentBase64), c => c.charCodeAt(0));
-    const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
-    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
-    return new TextDecoder().decode(decrypted);
-  } catch (e) {
-    console.warn("Erro ao descriptografar mensagem:", e);
-    return '[Erro de Leitura]';
-  }
-}
-
-    function gerarNomeAleatorio() {
-      const palavras = ['Cat', 'Ninja', 'Shadow', 'Phoenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior', 'Cyber'];
-      const palavra = palavras[Math.floor(Math.random() * palavras.length)];
-      const array = new Uint8Array(3);
-      crypto.getRandomValues(array);
-      const sufixoUnico = Array.from(array, byte => byte.toString(36).padStart(2, '0')).join('').substring(0, 5).toUpperCase();
-      return `${palavra}_${sufixoUnico}`;
+      try {
+        if (!encryptedContentBase64 || !ivBase64) return '[Mensagem não criptografada]';
+        
+        const key = await obterChaveCriptografia();
+        const encrypted = Uint8Array.from(atob(encryptedContentBase64), c => c.charCodeAt(0));
+        const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+        return new TextDecoder().decode(decrypted);
+      } catch (e) {
+        console.warn("Erro ao descriptografar mensagem:", e);
+        return '[Erro de Leitura]';
+      }
     }
 
     function formatarDataHora(dataIso) {
@@ -372,11 +357,9 @@
       const ano = d.getFullYear();
       const horas = String(d.getHours()).padStart(2, '0');
       const minutos = String(d.getMinutes()).padStart(2, '0');
-      
       return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
     }
 
-    /* MÓDULO TEMPORIZADOR DE EXSPIRAÇÃO */
     function calcularTempoRestante(dataIso) {
       const dataCriacao = new Date(dataIso).getTime();
       const agora = Date.now();
@@ -387,88 +370,82 @@
 
       const horas = Math.floor(restante / (1000 * 60 * 60));
       const minutos = Math.floor((restante % (1000 * 60 * 60)) / (1000 * 60));
-
       return `${horas}h ${minutos}m`;
     }
 
-function iniciarModuloTemporizador() {
-  if (timerModuloInterval) clearInterval(timerModuloInterval);
+    function iniciarModuloTemporizador() {
+      if (timerModuloInterval) clearInterval(timerModuloInterval);
 
-  timerModuloInterval = setInterval(() => {
-    const cards = document.querySelectorAll('.message-card');
-    cards.forEach(card => {
-      // Ignora avisos de Admin (eles não expiram)
-      if (card.classList.contains('admin-notice')) return;
+      timerModuloInterval = setInterval(() => {
+        const cards = document.querySelectorAll('.message-card');
+        cards.forEach(card => {
+          if (card.classList.contains('admin-notice')) return;
 
-      const createdAt = card.getAttribute('data-created-at');
-      if (createdAt) {
-        const restanteFormatted = calcularTempoRestante(createdAt);
-        if (!restanteFormatted) {
-          card.remove(); // Remove mensagens normais após 24h
-        } else {
-          const timerBadge = card.querySelector('.timer-badge');
-          if (timerBadge) timerBadge.textContent = `⏱️ ${restanteFormatted}`;
-        }
+          const createdAt = card.getAttribute('data-created-at');
+          if (createdAt) {
+            const restanteFormatted = calcularTempoRestante(createdAt);
+            if (!restanteFormatted) {
+              card.remove();
+            } else {
+              const timerBadge = card.querySelector('.timer-badge');
+              if (timerBadge) timerBadge.textContent = `⏱️ ${restanteFormatted}`;
+            }
+          }
+        });
+      }, 30000);
+    }
+
+    async function fazerCadastro() {
+      const emailInput = document.getElementById('email').value.trim();
+      const senhaInput = document.getElementById('senha').value;
+      
+      if (!emailInput || !senhaInput) {
+        statusText.innerText = "Please fill in both email and password.";
+        return;
       }
-    });
-  }, 30000);
-}
 
-async function fazerCadastro() {
-  const emailInput = document.getElementById('email').value.trim();
-  const senhaInput = document.getElementById('senha').value;
-  
-  if (!emailInput || !senhaInput) {
-    statusText.innerText = "Please fill in both email and password.";
-    return;
-  }
+      statusText.innerText = "Creating account...";
+      const usernameGerado = emailInput.split('@')[0];
 
-  statusText.innerText = "Creating account...";
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: emailInput,
+        password: senhaInput,
+        options: {
+          emailRedirectTo: 'https://mrtomatosam.github.io/stx/access.html',
+          data: { username: usernameGerado }
+        }
+      });
 
-  // Gera um nome de usuário automático baseado no e-mail
-  const usernameGerado = emailInput.split('@')[0];
-
-  const { data, error } = await supabaseClient.auth.signUp({
-    email: emailInput,
-    password: senhaInput,
-    options: {
-      emailRedirectTo: 'https://mrtomatosam.github.io/stx/access.html',
-      data: {
-        username: usernameGerado 
+      if (error) {
+        statusText.innerText = "Error: " + error.message;
+      } else {
+        statusText.innerText = "Account created! Check your email or sign in.";
       }
     }
-  });
 
-  if (error) {
-    statusText.innerText = "Error: " + error.message;
-  } else {
-    statusText.innerText = "Account created! Check your email or sign in.";
-  }
-}
+    async function fazerLogin() {
+      const emailInput = document.getElementById('email').value.trim();
+      const senhaInput = document.getElementById('senha').value;
 
-async function fazerLogin() {
-  const emailInput = document.getElementById('email').value.trim();
-  const senhaInput = document.getElementById('senha').value;
+      if (!emailInput || !senhaInput) {
+        statusText.innerText = "Please enter your email and password.";
+        return;
+      }
 
-  if (!emailInput || !senhaInput) {
-    statusText.innerText = "Please enter your email and password.";
-    return;
-  }
+      statusText.innerText = "Authenticating...";
 
-  statusText.innerText = "Authenticating...";
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+        email: emailInput, 
+        password: senhaInput 
+      });
 
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ 
-    email: emailInput, 
-    password: senhaInput 
-  });
-
-  if (error) {
-    statusText.innerText = "Login error: " + error.message;
-  } else {
-    statusText.innerText = "";
-    atualizarInterface(data.user);
-  }
-}
+      if (error) {
+        statusText.innerText = "Login error: " + error.message;
+      } else {
+        statusText.innerText = "";
+        atualizarInterface(data.user);
+      }
+    }
 
     async function fazerLogout() {
       if (canalRealtime) await canalRealtime.unsubscribe();
@@ -479,63 +456,60 @@ async function fazerLogin() {
       statusText.innerText = "You signed out.";
     }
 
-function atualizarInterface(user) {
-  if (user) {
-    usuarioAtual = user;
-    const isDbAdmin = user.user_metadata?.role === 'admin';
-    const username = user.user_metadata?.username || user.email.split('@')[0];
+    function atualizarInterface(user) {
+      if (user) {
+        usuarioAtual = user;
+        const isDbAdmin = user.user_metadata?.role === 'admin';
+        const username = user.user_metadata?.username || user.email.split('@')[0];
 
-    // Exibe/Oculta o botão Admin Console
-    if (adminConsoleBtn) {
-      if (isDbAdmin) adminConsoleBtn.classList.remove('oculto');
-      else adminConsoleBtn.classList.add('oculto');
+        if (adminConsoleBtn) {
+          if (isDbAdmin) adminConsoleBtn.classList.remove('oculto');
+          else adminConsoleBtn.classList.add('oculto');
+        }
+
+        if (topbarUsername) {
+          topbarUsername.innerText = isDbAdmin ? `${username} (ADMIN)` : username;
+        }
+
+        wrapperLogin.classList.add('oculto');
+        appLayout.classList.remove('oculto');
+
+        conectarComunidade(username, isDbAdmin);
+        carregarHistoricoTimeline();
+        iniciarModuloTemporizador();
+      }
     }
 
-    // Atualiza o texto do usuário no topo
-    if (topbarUsername) {
-      topbarUsername.innerText = isDbAdmin ? `${username} (ADMIN)` : username;
+    async function carregarHistoricoTimeline() {
+      timelineMessages.innerHTML = '';
+      const limite24HorasAtras = new Date(Date.now() - ONE_DAY_MS).toISOString();
+      
+      const { data, error } = await supabaseClient
+        .from('timeline_messages')
+        .select('*')
+        .or(`is_admin.eq.true,created_at.gte.${limite24HorasAtras}`)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+      if (error || !data) return;
+
+      const meuNome = usuarioAtual ? (usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0]) : '';
+
+      for (const msg of data) {
+        try {
+          const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
+          adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, Boolean(msg.is_admin));
+        } catch (err) {
+          console.error("Falha ao processar card de mensagem:", err);
+        }
+      }
     }
-
-    wrapperLogin.classList.add('oculto');
-    appLayout.classList.remove('oculto');
-
-    conectarComunidade(username, isDbAdmin);
-    carregarHistoricoTimeline();
-    iniciarModuloTemporizador();
-  }
-}
-
-async function carregarHistoricoTimeline() {
-  timelineMessages.innerHTML = '';
-
-  const limite24HorasAtras = new Date(Date.now() - ONE_DAY_MS).toISOString();
-  
-  const { data, error } = await supabaseClient
-    .from('timeline_messages')
-    .select('*')
-    .or(`is_admin.eq.true,created_at.gte.${limite24HorasAtras}`)
-    .order('created_at', { ascending: true })
-    .limit(100);
-
-  if (error || !data) return;
-
-  const meuNome = usuarioAtual ? (usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0]) : '';
-
-  for (const msg of data) {
-    try {
-      const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
-      adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, Boolean(msg.is_admin));
-    } catch (err) {
-      console.error("Falha ao processar card de mensagem:", err);
-    }
-  }
-}
 
     async function enviarMensagemTimeline() {
       const textoSanitizado = sanitizarEntrada(mensagemInput.value);
       if (!textoSanitizado) return;
 
-      const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
+      const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0];
       const ehAdmin = usuarioAtual.user_metadata?.role === 'admin';
 
       try {
@@ -596,93 +570,90 @@ async function carregarHistoricoTimeline() {
       if (event.key === 'Enter') enviarMensagemTimeline();
     }
 
-function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
-  const tempoRestante = calcularTempoRestante(hora);
-  
-  // Se não for admin e já passou de 24h, ignora
-  if (!ehAdmin && !tempoRestante) return;
+    function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = false) {
+      const tempoRestante = calcularTempoRestante(hora);
+      if (!ehAdmin && !tempoRestante) return;
 
-  const card = document.createElement('div');
-  let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
-  if (ehAdmin) cardClass += ' admin-notice';
-  
-  card.className = cardClass;
-  card.setAttribute('id', `msg-${id}`);
-  card.setAttribute('data-created-at', hora);
+      const card = document.createElement('div');
+      let cardClass = ehMinha ? 'message-card my-message' : 'message-card';
+      if (ehAdmin) cardClass += ' admin-notice';
+      
+      card.className = cardClass;
+      card.setAttribute('id', `msg-${id}`);
+      card.setAttribute('data-created-at', hora);
 
-  const dataHoraFormatada = formatarDataHora(hora);
+      const dataHoraFormatada = formatarDataHora(hora);
 
-  const headerDiv = document.createElement('div');
-  headerDiv.className = 'message-header-info';
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'message-header-info';
 
-  const authorSpan = document.createElement('span');
-  authorSpan.className = 'message-author';
-  
-  if (ehAdmin) {
-    authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Announcement</span>`;
-  } else {
-    authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
-  }
+      const authorSpan = document.createElement('span');
+      authorSpan.className = 'message-author';
+      
+      if (ehAdmin) {
+        authorSpan.innerHTML = `📢 ${autor} <span class="admin-badge">Announcement</span>`;
+      } else {
+        authorSpan.textContent = `${autor}${ehMinha ? ' (You)' : ''}`;
+      }
 
-  const metaDiv = document.createElement('div');
-  metaDiv.className = 'message-meta';
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'message-meta';
 
-  const timerSpan = document.createElement('span');
-  timerSpan.className = 'timer-badge';
-  
-  // Define o selo do temporizador ou fixo permanente
-  if (ehAdmin) {
-    timerSpan.textContent = `📌 Permanent`;
-    timerSpan.style.background = `#fef3c7`;
-    timerSpan.style.color = `#b45309`;
-  } else {
-    timerSpan.textContent = `⏱️ ${tempoRestante}`;
-  }
+      const timerSpan = document.createElement('span');
+      timerSpan.className = 'timer-badge';
+      
+      if (ehAdmin) {
+        timerSpan.textContent = `📌 Permanent`;
+        timerSpan.style.background = `#fef3c7`;
+        timerSpan.style.color = `#b45309`;
+      } else {
+        timerSpan.textContent = `⏱️ ${tempoRestante}`;
+      }
 
-  const timeSpan = document.createElement('span');
-  timeSpan.className = 'message-time';
-  timeSpan.textContent = dataHoraFormatada;
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'message-time';
+      timeSpan.textContent = dataHoraFormatada;
 
-  metaDiv.appendChild(timerSpan);
-  metaDiv.appendChild(timeSpan);
+      metaDiv.appendChild(timerSpan);
+      metaDiv.appendChild(timeSpan);
 
-  if (ehMinha) {
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'message-actions';
+      if (ehMinha) {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'message-actions';
 
-    const btnEdit = document.createElement('button');
-    btnEdit.className = 'btn-action btn-edit';
-    btnEdit.innerHTML = '✏️';
-    btnEdit.title = 'Edit message';
-    btnEdit.onclick = () => editarMensagem(id, texto);
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn-action btn-edit';
+        btnEdit.innerHTML = '✏️';
+        btnEdit.title = 'Edit message';
+        btnEdit.onclick = () => editarMensagem(id, texto);
 
-    const btnDelete = document.createElement('button');
-    btnDelete.className = 'btn-action btn-delete';
-    btnDelete.innerHTML = '🗑️';
-    btnDelete.title = 'Delete message';
-    btnDelete.onclick = () => deletarMensagem(id);
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'btn-action btn-delete';
+        btnDelete.innerHTML = '🗑️';
+        btnDelete.title = 'Delete message';
+        btnDelete.onclick = () => deletarMensagem(id);
 
-    actionsDiv.appendChild(btnEdit);
-    actionsDiv.appendChild(btnDelete);
-    metaDiv.appendChild(actionsDiv);
-  }
+        actionsDiv.appendChild(btnEdit);
+        actionsDiv.appendChild(btnDelete);
+        metaDiv.appendChild(actionsDiv);
+      }
 
-  headerDiv.appendChild(authorSpan);
-  headerDiv.appendChild(metaDiv);
+      headerDiv.appendChild(authorSpan);
+      headerDiv.appendChild(metaDiv);
 
-  const bodyDiv = document.createElement('div');
-  bodyDiv.className = 'message-body';
-  bodyDiv.textContent = texto;
+      const bodyDiv = document.createElement('div');
+      bodyDiv.className = 'message-body';
+      bodyDiv.textContent = texto;
 
-  card.appendChild(headerDiv);
-  card.appendChild(bodyDiv);
+      card.appendChild(headerDiv);
+      card.appendChild(bodyDiv);
 
-  timelineMessages.appendChild(card);
-  
-  if (!ehAdmin) {
-    timelineMessages.scrollTop = timelineMessages.scrollHeight;
-  }
-}
+      timelineMessages.appendChild(card);
+      
+      if (!ehAdmin) {
+        timelineMessages.scrollTop = timelineMessages.scrollHeight;
+      }
+    }
 
     function conectarComunidade(meuUsername, isAdmin) {
       canalRealtime = supabaseClient.channel('stx_global_channel');
@@ -727,70 +698,71 @@ function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = fals
 
     let activeDropdown = null;
 
-function fecharDropdowns() {
-  if (activeDropdown) {
-    activeDropdown.remove();
-    activeDropdown = null;
-  }
-}
+    function fecharDropdowns() {
+      if (activeDropdown) {
+        activeDropdown.remove();
+        activeDropdown = null;
+      }
+    }
 
-document.addEventListener('click', fecharDropdowns);
+    document.addEventListener('click', fecharDropdowns);
 
-function abrirMenuUsuario(event, username) {
-  event.stopPropagation();
-  fecharDropdowns();
+    function abrirMenuUsuario(event, username) {
+      event.stopPropagation();
+      fecharDropdowns();
 
-  const menu = document.createElement('div');
-  menu.className = 'user-menu-dropdown';
-  menu.style.top = `${event.clientY + 5}px`;
-  menu.style.left = `${event.clientX - 20}px`;
+      const menu = document.createElement('div');
+      menu.className = 'user-menu-dropdown';
+      menu.style.top = `${event.clientY + 5}px`;
+      menu.style.left = `${event.clientX - 20}px`;
 
-  const btnProfile = document.createElement('button');
-  btnProfile.innerText = '👤 View profile';
-  btnProfile.onclick = () => window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
+      const btnProfile = document.createElement('button');
+      btnProfile.innerText = '👤 View profile';
+      btnProfile.onclick = () => window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
 
-  const btnMessage = document.createElement('button');
-  btnMessage.innerText = '💬 Send message';
-  btnMessage.onclick = () => alert(`Direct Messaging with ${username} is coming soon!`);
+      const btnMessage = document.createElement('button');
+      btnMessage.innerText = '💬 Send message';
+      btnMessage.onclick = () => alert(`Direct Messaging with ${username} is coming soon!`);
 
-  menu.appendChild(btnProfile);
-  menu.appendChild(btnMessage);
-  document.body.appendChild(menu);
-  activeDropdown = menu;
-}
+      menu.appendChild(btnProfile);
+      menu.appendChild(btnMessage);
+      document.body.appendChild(menu);
+      activeDropdown = menu;
+    }
 
-function atualizarListaSidebar(state, meuUsername) {
-  const usuariosMap = new Map();
-  Object.values(state).forEach(presences => {
-    presences.forEach(p => { if (p.username) usuariosMap.set(p.username, p); });
-  });
+    function atualizarListaSidebar(state, meuUsername) {
+      const usuariosMap = new Map();
+      Object.values(state).forEach(presences => {
+        presences.forEach(p => { if (p.username) usuariosMap.set(p.username, p); });
+      });
 
-  const lista = Array.from(usuariosMap.keys());
-  countOnline.innerText = lista.length;
+      const lista = Array.from(usuariosMap.keys());
+      countOnline.innerText = lista.length;
 
-  if (lista.length === 0) {
-    listaOnline.innerHTML = '<li style="padding:10px; color:#94a3b8;">No users online</li>';
-    return;
-  }
+      if (lista.length === 0) {
+        listaOnline.innerHTML = '<li style="padding:10px; color:#94a3b8;">No users online</li>';
+        return;
+      }
 
-  listaOnline.innerHTML = '';
-  lista.forEach(nome => {
-    const li = document.createElement('li');
-    li.className = 'user-item';
-    li.style.cursor = 'pointer';
-    
-    const inicial = nome.charAt(0).toUpperCase();
-    const ehVoce = nome === meuUsername ? ' (You)' : '';
+      listaOnline.innerHTML = '';
+      lista.forEach(nome => {
+        const li = document.createElement('li');
+        li.className = 'user-item';
+        li.style.cursor = 'pointer';
+        
+        const inicial = nome.charAt(0).toUpperCase();
+        const ehVoce = nome === meuUsername ? ' (You)' : '';
 
-    li.innerHTML = `
-      <div class="user-avatar">${inicial}</div>
-      <span>${nome}${ehVoce}</span>
-    `;
+        li.innerHTML = `
+          <div class="user-avatar">${inicial}</div>
+          <span>${nome}${ehVoce}</span>
+        `;
 
-    li.onclick = (e) => abrirMenuUsuario(e, nome);
-    listaOnline.appendChild(li);
-  });
-}
+        li.onclick = (e) => abrirMenuUsuario(e, nome);
+        listaOnline.appendChild(li);
+      });
+    }
+
     async function checarSessao() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) atualizarInterface(session.user);
