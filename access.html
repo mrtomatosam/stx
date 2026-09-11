@@ -327,17 +327,19 @@
     }
 
     async function descriptografarTexto(encryptedContentBase64, ivBase64) {
-      try {
-        const key = await obterChaveCriptografia();
-        const encrypted = Uint8Array.from(atob(encryptedContentBase64), c => c.charCodeAt(0));
-        const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
-
-        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
-        return new TextDecoder().decode(decrypted);
-      } catch (e) {
-        return "[Error decrypting message]";
-      }
-    }
+  try {
+    if (!encryptedContentBase64 || !ivBase64) return '[Mensagem não criptografada]';
+    
+    const key = await obterChaveCriptografia();
+    const encrypted = Uint8Array.from(atob(encryptedContentBase64), c => c.charCodeAt(0));
+    const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+    return new TextDecoder().decode(decrypted);
+  } catch (e) {
+    console.warn("Erro ao descriptografar mensagem:", e);
+    return '[Erro de Leitura]';
+  }
+}
 
     function gerarNomeAleatorio() {
       const palavras = ['Cat', 'Ninja', 'Shadow', 'Phoenix', 'Astronaut', 'Falcon', 'Wolf', 'Lord', 'Sir', 'Master', 'Warrior', 'Cyber'];
@@ -468,7 +470,6 @@ async function carregarHistoricoTimeline() {
 
   const limite24HorasAtras = new Date(Date.now() - ONE_DAY_MS).toISOString();
   
-  // Busca mensagens de admin (sem restrição de tempo) OU mensagens de usuários normais dentro das 24h
   const { data, error } = await supabaseClient
     .from('timeline_messages')
     .select('*')
@@ -476,13 +477,17 @@ async function carregarHistoricoTimeline() {
     .order('created_at', { ascending: true })
     .limit(100);
 
-  if (error) return;
+  if (error || !data) return;
 
-  const meuNome = usuarioAtual.user_metadata?.username || usuarioAtual.email;
+  const meuNome = usuarioAtual ? (usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0]) : '';
 
   for (const msg of data) {
-    const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
-    adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, Boolean(msg.is_admin));
+    try {
+      const textoClaro = await descriptografarTexto(msg.encrypted_content, msg.iv);
+      adicionarMensagemNaTela(msg.id, msg.author, textoClaro, msg.author === meuNome, msg.created_at, Boolean(msg.is_admin));
+    } catch (err) {
+      console.error("Falha ao processar card de mensagem:", err);
+    }
   }
 }
 
