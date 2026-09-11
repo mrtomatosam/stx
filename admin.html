@@ -67,7 +67,7 @@
     </table>
   </div>
 
-  <script>
+<script>
     const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -84,7 +84,7 @@
 
     async function carregarUsuarios() {
       const tbody = document.getElementById('users-table-body');
-      tbody.innerHTML = '';
+      tbody.innerHTML = '<tr><td colspan="4">Loading users...</td></tr>';
 
       const { data, error } = await supabaseClient
         .from('profiles')
@@ -96,45 +96,77 @@
         return;
       }
 
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">No registered users found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+
       data.forEach(user => {
         const tr = document.createElement('tr');
-        const isSuspended = user.is_suspended;
+        const isSuspended = Boolean(user.is_suspended);
+        const userId = user.id;
+        const username = user.username || 'No name';
+        const dateFormatted = user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A';
+
+        // Oculta botão de perfil caso o usuário listado seja Admin
+        const isAdminUser = user.role === 'admin' || user.username === 'AdminSTX';
+        const profileBtnHtml = isAdminUser 
+          ? '' 
+          : `<a href="profile.html?u=${encodeURIComponent(username)}" class="btn-action" style="background:#0284c7; color:white; text-decoration:none;">View Profile</a>`;
 
         tr.innerHTML = `
-          <td><strong>${user.username}</strong></td>
-          <td>${new Date(user.created_at).toLocaleDateString()}</td>
+          <td><strong>${username}</strong></td>
+          <td>${dateFormatted}</td>
           <td><span class="${isSuspended ? 'status-suspended' : 'status-active'}">${isSuspended ? 'Suspended' : 'Active'}</span></td>
           <td>
-            <button onclick="alternarSuspensao('${user.id}', ${isSuspended})" class="btn-action btn-warn">
+            <button class="btn-action btn-warn btn-toggle-suspend">
               ${isSuspended ? 'Reactivate' : 'Suspend'}
             </button>
-            <button onclick="excluirUsuarioAdmin('${user.id}')" class="btn-action btn-del">Delete</button>
-            <a href="profile.html?u=${encodeURIComponent(user.username)}" class="btn-action" style="background:#0284c7; color:white; text-decoration:none;">View Profile</a>
+            <button class="btn-action btn-del btn-delete-user">Delete</button>
+            ${profileBtnHtml}
           </td>
         `;
+
+        // Atribui os eventos via JavaScript diretamente para evitar problemas de escopo inline
+        tr.querySelector('.btn-toggle-suspend').onclick = () => alternarSuspensao(userId, isSuspended);
+        tr.querySelector('.btn-delete-user').onclick = () => excluirUsuarioAdmin(userId);
+
         tbody.appendChild(tr);
       });
     }
 
     async function alternarSuspensao(userId, statusAtual) {
-      const { error } = await supabaseClient
+      const novoStatus = !statusAtual;
+      
+      const { data, error } = await supabaseClient
         .from('profiles')
-        .update({ is_suspended: !statusAtual })
-        .eq('id', userId);
+        .update({ is_suspended: novoStatus })
+        .eq('id', userId)
+        .select();
 
-      if (error) alert("Error updating status: " + error.message);
-      else carregarUsuarios();
+      if (error) {
+        alert("Error updating status: " + error.message);
+        console.error("Supabase Update Error:", error);
+      } else {
+        carregarUsuarios();
+      }
     }
 
     async function excluirUsuarioAdmin(userId) {
-      if (confirm("Delete this user account permanently?")) {
-        const { error } = await supabaseClient
-          .from('profiles')
-          .delete()
-          .eq('id', userId);
+      if (!confirm("Delete this user account permanently?")) return;
 
-        if (error) alert("Error deleting user: " + error.message);
-        else carregarUsuarios();
+      const { error } = await supabaseClient
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) {
+        alert("Error deleting user: " + error.message);
+        console.error("Supabase Delete Error:", error);
+      } else {
+        carregarUsuarios();
       }
     }
 
