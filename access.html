@@ -305,12 +305,18 @@
     let usuarioAtual = null;
     let timerModuloInterval = null;
 
-    function irParaMeuPerfil() {
-      if (!usuarioAtual) return;
-      const username = usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0];
-      window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
-    }
+function irParaMeuPerfil() {
+  if (!usuarioAtual) return;
+  const isDbAdmin = usuarioAtual.user_metadata?.role === 'admin';
+  
+  if (isDbAdmin) {
+    alert("Administrators do not have a public profile.");
+    return;
+  }
 
+  const username = usuarioAtual.user_metadata?.username || usuarioAtual.email.split('@')[0];
+  window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
+}
     function sanitizarEntrada(input) {
       if (typeof input !== 'string') return '';
       return input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').normalize('NFC').trim();
