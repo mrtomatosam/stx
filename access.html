@@ -608,31 +608,72 @@ function adicionarMensagemNaTela(id, autor, texto, ehMinha, hora, ehAdmin = fals
       });
     }
 
-    function atualizarListaSidebar(state, meuUsername) {
-      const usuariosMap = new Map();
-      Object.values(state).forEach(presences => {
-        presences.forEach(p => { if (p.username) usuariosMap.set(p.username, p); });
-      });
+    let activeDropdown = null;
 
-      const lista = Array.from(usuariosMap.keys());
-      countOnline.innerText = lista.length;
+function fecharDropdowns() {
+  if (activeDropdown) {
+    activeDropdown.remove();
+    activeDropdown = null;
+  }
+}
 
-      if (lista.length === 0) {
-        listaOnline.innerHTML = '<li style="padding:10px; color:#94a3b8;">No users online</li>';
-        return;
-      }
+document.addEventListener('click', fecharDropdowns);
 
-      listaOnline.innerHTML = lista.map(nome => {
-        const inicial = nome.charAt(0).toUpperCase();
-        const ehVoce = nome === meuUsername ? ' (You)' : '';
-        return `
-          <li class="user-item">
-            <div class="user-avatar">${inicial}</div>
-            <span>${nome}${ehVoce}</span>
-          </li>`;
-      }).join('');
-    }
+function abrirMenuUsuario(event, username) {
+  event.stopPropagation();
+  fecharDropdowns();
 
+  const menu = document.createElement('div');
+  menu.className = 'user-menu-dropdown';
+  menu.style.top = `${event.clientY + 5}px`;
+  menu.style.left = `${event.clientX - 20}px`;
+
+  const btnProfile = document.createElement('button');
+  btnProfile.innerText = '👤 View profile';
+  btnProfile.onclick = () => window.location.href = `profile.html?u=${encodeURIComponent(username)}`;
+
+  const btnMessage = document.createElement('button');
+  btnMessage.innerText = '💬 Send message';
+  btnMessage.onclick = () => alert(`Direct Messaging with ${username} is coming soon!`);
+
+  menu.appendChild(btnProfile);
+  menu.appendChild(btnMessage);
+  document.body.appendChild(menu);
+  activeDropdown = menu;
+}
+
+function atualizarListaSidebar(state, meuUsername) {
+  const usuariosMap = new Map();
+  Object.values(state).forEach(presences => {
+    presences.forEach(p => { if (p.username) usuariosMap.set(p.username, p); });
+  });
+
+  const lista = Array.from(usuariosMap.keys());
+  countOnline.innerText = lista.length;
+
+  if (lista.length === 0) {
+    listaOnline.innerHTML = '<li style="padding:10px; color:#94a3b8;">No users online</li>';
+    return;
+  }
+
+  listaOnline.innerHTML = '';
+  lista.forEach(nome => {
+    const li = document.createElement('li');
+    li.className = 'user-item';
+    li.style.cursor = 'pointer';
+    
+    const inicial = nome.charAt(0).toUpperCase();
+    const ehVoce = nome === meuUsername ? ' (You)' : '';
+
+    li.innerHTML = `
+      <div class="user-avatar">${inicial}</div>
+      <span>${nome}${ehVoce}</span>
+    `;
+
+    li.onclick = (e) => abrirMenuUsuario(e, nome);
+    listaOnline.appendChild(li);
+  });
+}
     async function checarSessao() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) atualizarInterface(session.user);
