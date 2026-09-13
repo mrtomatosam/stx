@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';">
   <title>STX - Encrypted Public Timeline</title>
   <link rel="stylesheet" href="./css/estilo.css">
+  <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -280,9 +282,7 @@
   </div>
 
  <script>
-    const SUPABASE_URL = 'https://hcgogxfpemzpsloudybp.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_2XLoBioB2zv9ilQTzC5pSw_7AOqEvFC';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { supabaseUrl: SUPABASE_URL, supabaseAnonKey: SUPABASE_ANON_KEY } = window.STX_CONFIG || {};
 
     const SECRET_KEY_STRING = 'STX-Public-Timeline-Secret-Key-2026';
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
