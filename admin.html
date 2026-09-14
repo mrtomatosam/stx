@@ -74,7 +74,7 @@
 
     async function verificarPermissaoAdmin() {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session || session.user.user_metadata?.role !== 'admin') {
+      if (!session || session.user.app_metadata?.role !== 'admin') {
         alert("Access Denied: Admin privileges required.");
         window.location.href = 'access.html';
         return;
