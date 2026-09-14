@@ -441,10 +441,11 @@ async function fazerLogin() {
   statusText.innerText = "Authenticating...";
 
   // 1. Tenta autenticar no Supabase Auth
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ 
-    email: emailInput, 
-    password: senhaInput 
-  });
+try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: emailInput,
+      password: senhaInput
+    });
 
   if (error) {
     statusText.innerText = "Login error: " + error.message;
@@ -452,21 +453,24 @@ async function fazerLogin() {
   }
 
   // 2. Verifica se a conta está suspensa na tabela 'profiles'
-  const { data: profile, error: profileError } = await supabaseClient
-    .from('profiles')
-    .select('is_suspended')
-    .eq('id', data.user.id)
-    .single();
+const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('is_suspended')
+      .eq('id', data.user.id)
+      .maybeSingle();
 
-  if (profile && profile.is_suspended) {
-    await supabaseClient.auth.signOut(); // Desloga o usuário imediatamente
-    statusText.innerText = "Your account has been suspended. Contact support.";
-    return;
-  }
+if (profile?.is_suspended) {
+      await supabaseClient.auth.signOut();
+      statusText.innerText = "Your account has been suspended. Contact support.";
+      return;
+    }
 
   // 3. Se estiver tudo OK, prossegue
-  statusText.innerText = "";
-  atualizarInterface(data.user);
+statusText.innerText = "";
+    atualizarInterface(data.user);
+  } catch (err) {
+    statusText.innerText = "Login failed: " + (err.message || err);
+  }
 }
     async function fazerLogout() {
       if (canalRealtime) await canalRealtime.unsubscribe();
