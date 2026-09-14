@@ -486,7 +486,7 @@ function atualizarInterface(user) {
   if (user) {
     usuarioAtual = user;
     const isDbAdmin = user.app_metadata?.role === 'admin';
-    const username = user.user_metadata?.username || user.email.split('@')[0];
+    const username = user.app_metadata?.username || user.email.split('@')[0];
 
     if (adminConsoleBtn) {
       if (isDbAdmin) adminConsoleBtn.classList.remove('oculto');
